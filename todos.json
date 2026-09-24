@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T08:52Z",
+  "updated_at": "2026-09-24T09:58Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T11",
-    "state": "T11 24.09: user works across machines → all user-specific absolute paths removed from the repo per user request; canonical source location is now repo-relative `src/kindle-dash/` (AGENTS.md path rule), machine-specific origin deliberately not recorded. Awaiting user: copy the Go source into `src/kindle-dash/`. On card: refresh.sh v4 + dash (mmap, INVISIBLE) running; visible image = bistable dashboard.png (single-IDAT grayscale). Final architecture decided (I10), implementation NOT started.",
-    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. First check whether `src/kindle-dash/` now exists in the repo; if yes, proceed to T12. Until the user copies the Go source into `src/kindle-dash/`, T11 stays blocked and T12-T17 cannot be implemented (no inventing source — AGENTS.md). After every state change: update this resume block + updated_at, commit together with the work."
+    "next_todo": "T12",
+    "state": "24.09: T11 DONE — Go source is in src/kindle-dash/ (6 files: go.mod, main.go, render.go, convert.go, fb_linux.go, fb_stub.go), byte-matching the Notion Artifacts canonical sizes (20/2695/416/2604/2322/511); go vet clean; compiles for darwin + linux/arm (GOARM=7); the linux/arm build is 6,291,616 B = the EXACT size of the deployed reference binary (SHA differs only: built with go1.27.1, no -trimpath — T16 rebuilds with Go ≤1.23 + -trimpath). convert.go 1-byte loss at the Teil A/B join was found and fixed (2603→2604). Ready for the I10 milestone; next = T12 saveKindlePNG. On card: refresh.sh v4 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent of T12-T17).",
+    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T12 (implement saveKindlePNG in convert.go: filter-0 rows → ONE compress/zlib stream → exactly 1 IDAT, IHDR color type 0; do NOT use image/png — it blocks at ~32 KB → 48 IDAT; self-test via the shell validator in docs/03). Prereq T11 is done. After T17 proves the device path, revisit T18 (still blocked on T19 API key). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -117,12 +117,13 @@
     },
     {
       "id": "T11",
-      "title": "Obtain Go source into src/kindle-dash/ (repo-relative; user copies it in)",
-      "status": "blocked",
+      "title": "Obtain Go source into src/kindle-dash/ (repo-relative)",
+      "status": "done",
       "issue": "I10",
-      "block_on": "User must copy the Go source into `src/kindle-dash/` (repo-relative; flat layout: go.mod, main.go, render.go, convert.go, fb_linux.go, fb_stub.go). The machine-specific origin location is deliberately not recorded in this repo (path rule, AGENTS.md). Until then T12-T17 cannot be implemented — do NOT invent the source (AGENTS.md).",
-      "refs": ["AGENTS.md (actual state, bullet 4)", "artifacts/binaries/dash (reference binary)"],
-      "details": "Files: go.mod, main.go, render.go, convert.go, fb_linux.go, fb_stub.go (flat layout, no cmd/dash/). 24.09: absolute user-specific paths removed from all repo references per user request (user works across machines); canonical location is now repo-relative `src/kindle-dash/`."
+      "done_at": "2026-09-24",
+      "verification": "All 6 files present in src/kindle-dash/ and byte-match the Notion Artifacts canonical sizes (go.mod 20, main.go 2695, render.go 416, convert.go 2604, fb_linux.go 2322, fb_stub.go 511). go vet clean; compiles for darwin (local) + linux/arm GOARM=7 (device arch); the linux/arm build is 6,291,616 B = the EXACT size of the deployed reference binary. convert.go 1-byte loss at the Teil A/B join found + fixed (2603→2604, blank line before errA restored per Notion Teil B). A fresh build's SHA differs from the reference only because it was built with go1.27.1 and no -trimpath — T16 rebuilds with Go ≤1.23 + -trimpath. Gold-standard confirmation = byte-diff vs the user's Mac originals (Notion storage is lossy: trailing newlines stripped).",
+      "refs": ["AGENTS.md (actual state, bullet 4)", "artifacts/binaries/dash (reference binary)", "Notion Artifacts page (canonical source)"],
+      "details": "Files: go.mod, main.go, render.go, convert.go, fb_linux.go, fb_stub.go (flat layout, no cmd/dash/), transcribed from the Notion Artifacts page (the canonical source; split code blocks rejoined). NOTE: files have NO trailing newline — faithful to the Notion code blocks, which strip the trailing \\n; `gofmt -l` flags all 5 .go files for that single point only (mid-file content is gofmt-clean). Kept faithful (no `gofmt -w`) per the 'must not be invented' rule + documented sizes; gofmt-cleaning (add trailing newlines) is an optional user decision. 24.09: absolute user-specific paths removed from all repo references (user works across machines); canonical location is repo-relative src/kindle-dash/."
     },
     {
       "id": "T12",
