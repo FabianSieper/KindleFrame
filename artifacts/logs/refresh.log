@@ -233,3 +233,32 @@ get: http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame: Get "htt
 Thu Sep 24 06:31:50 UTC 2026 dl rc=1
 Thu Sep 24 06:37:28 UTC 2026 dl ok
 Thu Sep 24 06:43:07 UTC 2026 dl ok
+Thu Sep 24 14:17:58 UTC 2026 staged dash size 5177496
+Thu Sep 24 14:19:47 UTC 2026 staged dash size 5177496
+Thu Sep 24 14:19:47 UTC 2026 v4 start pid=6026
+Thu Sep 24 14:19:48 UTC 2026 boot: restored cache
+Thu Sep 24 14:19:48 UTC 2026 boot render
+Thu Sep 24 14:19:50 UTC 2026 boot render rc=0
+Thu Sep 24 18:13:09 UTC 2026 staged dash size 5177496
+Thu Sep 24 18:13:09 UTC 2026 v4 start pid=5674
+Thu Sep 24 18:13:09 UTC 2026 boot: restored cache
+Thu Sep 24 18:13:10 UTC 2026 boot render
+Thu Sep 24 18:13:12 UTC 2026 boot render rc=0
+Thu Sep 24 20:37:37 UTC 2026 staged dash size 5177496
+Thu Sep 24 20:37:37 UTC 2026 v5 start pid=5658
+Thu Sep 24 20:37:38 UTC 2026 boot: restored cache
+Thu Sep 24 20:37:38 UTC 2026 boot render
+Thu Sep 24 20:37:41 UTC 2026 boot render rc=0
+Thu Sep 24 20:42:53 UTC 2026 dl ok
+Thu Sep 24 20:42:53 UTC 2026 image changed, render
+Thu Sep 24 20:42:53 UTC 2026 render rc=0
+Thu Sep 24 21:55:14 UTC 2026 staged dash size 5177496
+Thu Sep 24 21:55:14 UTC 2026 v6 start pid=5700
+Thu Sep 24 21:55:14 UTC 2026 boot: restored cache
+Thu Sep 24 21:55:15 UTC 2026 boot render
+Thu Sep 24 21:55:16 UTC 2026 boot render rc=0
+Thu Sep 24 22:00:29 UTC 2026 dl ok
+Thu Sep 24 22:00:29 UTC 2026 image changed, render
+Thu Sep 24 22:00:29 UTC 2026 render rc=0
+Thu Sep 24 22:05:51 UTC 2026 dl ok
+Thu Sep 24 22:11:12 UTC 2026 dl ok

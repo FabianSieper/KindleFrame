@@ -6,7 +6,7 @@ A 24/7 E-Ink dashboard on a jailbroken **Kindle Voyage (KV)** — driven by **n8
 
 This repository replaces the project's Notion page as the canonical documentation. A fresh AI should be able to read this repo and continue the work without any other context.
 
-## Current state (2026-09-24)
+## Current state (2026-09-25 — final state: s=0.95 „perfekt“, no screensaver via ~ds)
 
 | Component | Status |
 |---|---|
@@ -14,12 +14,12 @@ This repository replaces the project's Notion page as the canonical documentatio
 | n8n webhook → PNG 1072×1448 | ✅ `docs/04-n8n-integration.md` |
 | On-device daemon `refresh.sh` (v6: 10 s tick, 300 s download, render only on image change, DASH_SCALE=0.95) | ✅ `artifacts/` |
 | `dash` (static Go binary, Go 1.23.12, DASH_SCALE letterbox seit T20): fetch + decode + grayscale + `eips -g` render | ✅ auf Karte: T20-Build seit 24.09 ~20:20Z (T20-Deploy); T16-Build seit 24.09 13:29Z (T17-Deploy) |
-| **Visible rendering** | ✅ **via `eips -g`** (24.09 user: visible + orientation OK; pre-T16 the mmap writes were invisible — "nothing happens") |
-| Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T17 in progress (flicker); T20 done (User-Verifikation 24.09 abend, Round 2: „richtig gut“); T21 in progress (DASH_SCALE 0.95, v6 deployed 24.09 abend)** |
-| Image size on display | ⏳ round 2: whole image visible at s=0.8, frame „viel zu groß“ (user 24.09 abend) → **T21: DASH_SCALE 0.95** (≈10 % black, thinnest visible margin; v6 deployed 24.09 abend, round 3 pending) |
+| **Visible rendering** | ✅ **via `eips -g`** (user rounds 1–3: visible + orientation OK, s=0.95 „perfekt“ 25.09; pre-T16 the mmap writes were invisible — "nothing happens") |
+| Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T20 done (round 2, 24.09 abend); T21 done (round 3, 25.09: s=0.95 „perfekt“); T17 in progress (flicker not yet reported)** |
+| Image size on display | ✅ **T21 done (25.09):** s=0.95 (≈10 % black, thinnest visible margin) — user round 3: „das Bild ist jetzt perfekt von der Größe“; fallbacks 0.9/1.0 not needed |
 | Flicker | ⏳ not yet reported by user (T17 final acceptance) |
 
-**→ Next ticket:** **T21 in progress** (maximize image / minimize border — DASH_SCALE 0.95, refresh.sh v6, deployed 24.09 abend as Point-Write, SHA-verified; awaiting user: reboot + „Wach bleiben“ (Stay Awake) + ~10 min awake + verification round 3; exact resume in `todos.json`); then close **T21** (+ **T17** if flicker is acceptable). **T20 = done** (user-verified round 2, 24.09 abend). Rules for continuing AIs: **`AGENTS.md`**.
+**→ Next ticket:** **T17 final acceptance** (flicker — not reported in rounds 1–3; one question to the user). Then: optional n8n grayscale (T18) blocked on T19 (API key 401). Keep-awake on the device = **~ds** (user-verified 25.09; a reboot cancels it — the user re-enters it). Exact resume in `todos.json`. Rules for continuing AIs: **`AGENTS.md`**.
 
 ## Repo structure
 
@@ -36,7 +36,7 @@ docs/
   05-artifact-manifest.md← what is in here, what was excluded and why
 artifacts/
   refresh.sh + .bak-v1/.bak-v3, RUNME.sh, emergency.sh, .boot, dash,
-  dashboard.png (on-card cache = last download; the visible frame is the v2/v3-era eips grayscale), dashboard-real.png.bak (broken test)
+  dashboard.png (on-card cache = last render; 25.09: s=0.95 grayscale, 463,592 B), dashboard-real.png.bak (broken test)
   binaries/  images/ (all eips/orientation/webhook test images)  logs/
   jailbreak/ (watchthis-release, kindle-fertig, kual-mrpi, zips, hotfix bin)
   notes/ (user's original session notes, German, kept verbatim)
@@ -57,5 +57,5 @@ n8n/
 ## How to continue (short version)
 
 1. Read `AGENTS.md` (mandatory), then `todos.json` → `resume` (the exact continuation point; one todo at a time, `todos.json` updated in every commit).
-2. The Go source **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts; no user-specific absolute paths — AGENTS.md path rule). I10 plan steps 1–7: steps 1–3 implemented (T12 `saveKindlePNG` → T13 `dash get` writes single-IDAT grayscale PNG → T14 `dash render` = `exec eips -g`), T15/T16 done, **deployed to the card 24.09 13:29Z (T17, in progress** — user 24.09: visible ✅ orientation ✅ size ❌ "too big" → **T20**). **T20 in progress:** code + tests + rebuild done 17:42Z (T20 build `58f751e4…`, same size as T16 → reboot is the effective deploy trigger); **deployed 24.09 ~20:20Z** (Point-Write, User-OK; SHA Repo == Karte verifiziert); next = user reboot + Stay Awake + ~10 min awake + verification round 2, then T17 final acceptance (size + flicker).
+2. The Go source **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts; no user-specific absolute paths — AGENTS.md path rule). I10 plan steps 1–7: **all implemented** (T12 `saveKindlePNG` → T13 `dash get` writes single-IDAT grayscale PNG → T14 `dash render` = `exec eips -g` → T15/T16 build → T17 deployed 24.09 13:29Z → **T20 done 24.09 abend (round 2: „richtig gut“)** → **T21 done 25.09 (round 3: s=0.95 „perfekt“** — final state: image as big as possible, border as thin as possible, no screensaver via user-side `~ds`). Open: **T17 flicker** (user rounds 1–3: not reported → final question) + **T18/T19** (n8n grayscale, blocked on API key 401).
 3. Verification ALWAYS goes through the user (the display is not visible to us): visibility, orientation (t180 reference), flicker.

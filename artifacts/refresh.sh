@@ -2,9 +2,12 @@
 # refresh.sh v6 — Kindle Voyage live dashboard via dash (static Go binary)
 # 10s tick | download every 300s | render ONLY on image change (cksum)
 # NOTE: ticks advance only while the device is AWAKE — in deep sleep the loop
-# freezes between wakes (resumes on wake). For a fresh dashboard keep the
-# device awake: Settings -> Device -> Stay Awake. (User setting only — no
-# verified script-level keep-awake mechanism exists.)
+# freezes (resumes on wake; verified 24.09). KEEP AWAKE — user-verified on
+# this device (25.09): tap the SEARCH BAR, type  ~ds  and press Enter -> the
+# screensaver never activates, the device stays awake. A REBOOT CANCELS ~ds
+# -> re-enter it after every reboot. Side effect: the manual short-press
+# screen lock stops working. (No script-level keep-awake mechanism exists —
+# do not invent one.)
 # dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode to
 #   single-IDAT grayscale PNG — write only, NO display
 # dash render <file>: display the PNG via eips (EPDC wave — the only visible path)

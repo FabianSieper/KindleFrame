@@ -66,7 +66,7 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - Between the first inventory and the repo build, several files were removed from the card: `eips`/`eips-new`/`eips-symlink` (local copies), `kindle-dash.zip`, `mrpi.log`/`reboot.log`/`eips-test.log`, test `.txt` files, `watchthis/`/`kindle-fertig/`/`kual-mrpi/` directories, `watchthis-jailbreak-r03.zip`, `Update_hotfix_watchthis_custom.bin`.
 - **All** of them exist as local copies and are secured in this repo (`artifacts/jailbreak/`). The **system `eips`** lives on the internal ROM partition (inaccessible) and does **not** go into the repo. `[verified]`
 
-## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — flicker open; T20 done 24.09 abend, user-verified; T21 in progress → I11)
+## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — flicker open; T20 done 24.09 abend; T21 done 25.09, user-verified → I11)
 
 `dash` remains the only binary; `eips` remains the only visible path; the Mac drops out completely:
 
@@ -87,7 +87,7 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0` (partial region as before; full only when needed). **[done T14]** (rc + duration → `/mnt/us/diag.log`; exec-permission risk stays open until T17.)
 4. Static ARM build (Go ≤ 1.23, `GOARM=7`, `-ldflags="-s"`), keep `dash` < ~7 MB; replace `/mnt/us/dash` (size change → hot re-stage kicks in) + reboot. **[done T16 — Go 1.23.12, 5,177,496 B, `artifacts/binaries/dash` (repo == card); deployed on card 24.09 13:29Z]**
 5. Check `refresh.log`: `dl ok` (size ~390–420 KB expected) + `render rc=0`. **[partly done T17 — boot render `render rc=0` (14:19:50Z) + eips rc=0 with durations 3.244 s / 2.636 s / 395.8 ms @14:20:14Z; first `dl ok` unobserved — card log gap after ~14:20Z, device likely sleeping [open]]**
-6. **User verification (mandatory, display-side):** visible? t180 orientation? flicker/interval OK? **[in progress T17 — user 24.09: visible ✅, orientation ✅ (t180 reference), size ❌ "edge-to-edge, too big" → T20; flicker/interval NOT yet reported]**
+6. **User verification (mandatory, display-side):** visible? t180 orientation? flicker/interval OK? **[in progress T17 — visible ✅, orientation ✅ (rounds 1–3); size: s=0.8 ❌ → T20 → s=0.95 ✅ „perfekt“ (25.09, T21 done); flicker/interval NOT yet reported (rounds 1–3)]**
 7. Optional: switch the n8n side to grayscale (relieves the device, not needed for correctness) + open item from I8 (API key). **[open — T18/T19 blocked on the user's n8n API key (401, I2/I8)]**
 
 File-level details + open risks: `docs/03-eink-rendering.md` §Implementation plan.
@@ -116,10 +116,11 @@ File-level details + open risks: `docs/03-eink-rendering.md` §Implementation pl
 - 200-MB update bins, >3-MB BMP/PNM diagnostic derivatives, system `eips` (ROM) — reasons: `docs/05`.
 
 
-## I11 — 24.09 abend: T20 verifiziert (Round 2) + T21 (Bild maximieren / Rand minimieren) + Screensaver-Wunsch ← CURRENT TICKET (T21)
+## I11 — 24.09 abend: T20 verifiziert (Round 2) + T21 (Bild maximieren / Rand minimieren) + Screensaver-Wunsch (T21 done 25.09, user-verified; Screensaver gelöst via ~ds)
 
 - **Round 2 (User, 24.09 abend, nach T20-Deploy + Reboot ~20:37Z):** Boot-Bild = alter Cache (Zoom-Crop des stale 06:43-RGB; Einmaler — Cache hält jetzt das Grayscale-Bild, Boot-Render zeigt das letzte Frame); **erstes Grayscale-Single-IDAT-Render 20:42:53Z** (dl ok + image changed + render rc=0, eips 181 ms) = ganzes Bild + schwarzer Rahmen — User: **„richtig gut!“** → **T20 done** (Safe-Spec end-to-end bestätigt; on-card PNG: 1072×1448, 8-bit, ct 0, 1 IDAT, 463,228 B, SHA 6cdc49d9…). Rand bei s=0.8: „viel zu groß“ → T21. Gerät ging danach in Deep Sleep → **Screensaver erschien** (Wunsch: nie wieder).
 - **Geometrie-Befund:** n8n-Canvas = **1072×1448 = exakt Panel-Größe** → eips rendert 1:1 (kein zweites Letterbox/Crop) → sichtbarer Rand = 100 % dash-DASH_SCALE (s=0.8 → ≈36 % Schwarz; s=1.0 → edge-to-edge = Round-1-„zu groß“-Zustand).
 - **Wunsch 1 (T21):** „das bild soll so groß wie möglich … und so wenig schwarzer rand wie möglich“ → **s=0.95** (≈10 % Schwarz; dünnster noch sichtbarer Rand ≈27 px seitlich / ≈36 px oben-unten; Bild ~19 % größer als bei 0.8). Deployed 24.09 abend (refresh.sh v6 = 3,714 B, SHA 2ebe400c…, Point-Write /Volumes/Kindle/refresh.sh, SHA Repo == Karte, rwx------; sicherer Trigger = Reboot). Fallbacks ohne Rebuild: 0.9 (≈18 % Schwarz) / 1.0 (kein Rand).
-- **Wunsch 2 (Screensaver nie):** Gerät soll nie den Screensaver zeigen → „Wach bleiben“ (Settings → Device → „Stay Awake“; exakte deutsche Bezeichnung [assumed], im refresh.sh-Header dokumentiert). War sie beim Sleep-Ereignis an? [open — User gefragt].
-- **Status:** T21 in progress (v6 deployed; wartet auf Round 3: Reboot + „Wach bleiben“ + ~10 min wach → Verifikation Bild/Rand/Flackern/Screensaver). T17 offen (Flackern nicht gemeldet).
+- **Wunsch 2 (Screensaver nie) → gelöst 25.09 (User-verifiziert auf dem Gerät):** ins Suchfeld `~ds` tippen + Enter → der Screensaver aktiviert sich nie, das Gerät bleibt wach. **Ein Reboot hebt `~ds` auf** → nach jedem Reboot neu eintippen (User-Job: „das übernehme ich, du musst hier nichts mehr machen“). Side-Effect: kurzes Drücken (Bildschirm aus) funktioniert damit nicht. Quellen: the-ebook-reader.com (2017-12-31), martin-prochnow.de, tipps-tricks-kniffe.de. Im refresh.sh-Header NOTE dokumentiert (25.09 aktualisiert); der frühere „Wach bleiben“-Menüpfad (Settings → Device) = sekundär [assumed].
+- **Round 3 (25.09, User):** nach User-Reboot 21:55:14Z (v6 start pid=5700 + Boot-Render, eips 1.63 s) → **22:00:29Z dl ok + image changed + render rc=0 (eips 181.7 ms) = erstes s=0.95-Bild** (on-card PNG: 1072×1448, 8-bit, ct 0, 1 IDAT, 463,592 B, SHA ce561a6c…; Repo-Copy aktualisiert, bit-identisch); 22:05:51Z + 22:11:12Z dl ok, kein Change → kein Render; danach Silentium (22:33:32Z-Check) = Gerät im Deep Sleep (Loop-Freeze; Wake-Resume verifiziert 24.09). User 25.09: **„das Bild ist jetzt perfekt von der Größe“** → **T21 done**. ~ds: User-verifiziert (s. Wunsch 2). Logs: refresh.log 264 Zeilen (SHA daa8cf1f…), diag.log 322 Zeilen (SHA 119a6b99…), alle eips rc=0.
+- **Status:** T21 done (user-verified 25.09). T17 offen (Flackern nie gemeldet, Rounds 1–3 → finale Frage beim User).
