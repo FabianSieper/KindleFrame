@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T23:04Z",
+  "updated_at": "2026-09-24T23:26Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -11,8 +11,8 @@
   },
   "resume": {
     "next_todo": "T17",
-    "state": "25.09 (T21 DONE — final state): User-Round 3: „das Bild ist jetzt perfekt von der Größe“ (s=0.95, refresh.sh v6) → T21 done (user-verified). Timeline 25.09 (UTC): 21:55:14Z User-Reboot → v6 start pid=5700 + Boot-Render (eips 1.63 s); 22:00:29Z dl ok + image changed + render rc=0 (eips 181.7 ms) = erstes s=0.95-Bild (on-card PNG 1072×1448 / 8-bit / ct 0 / 1 IDAT / 463,592 B, SHA ce561a6c…; Repo-Copy aktualisiert, bit-identisch); 22:05:51Z + 22:11:12Z dl ok, kein Change → kein Render; danach Silentium (22:33:32Z-Check) = Gerät im Deep Sleep → Loop-Freeze (Wake-Resume verifiziert 24.09). ~ds Keep-Awake user-verifiziert auf Gerät (Suchfeld + ~ds + Enter; Reboot hebt es auf — User-Job; Side-Effect: Short-Press-Lock) → in refresh.sh NOTE dokumentiert (v6, 3,913 B, SHA 514a37ac…, Point-Write 25.09 00:53 CEST, Repo == Karte verifiziert, rwx------). Logs grün: refresh.log 264 Zeilen (SHA daa8cf1f…), diag.log 322 Zeilen (SHA 119a6b99…), alle eips rc=0. OPEN: T17 Flackern (nie gemeldet, Rounds 1–3 → finale User-Frage) + T18/T19 (n8n API key 401).",
-    "how_to_resume": "1) User fragen: (a) Flackern akzeptabel? (T17-Final-Acceptance; Render nur bei Bildwechsel = 1 EPDC-Welle, Feed statisch = gar keins; wenn nicht → I10-Schritt-6-Optionen). (b) Gerät jetzt wach + ~ds? Wenn wach: refresh.log nach ~10 min erneut prüfen (neue dl-Zeilen ≈ alle 320 s = Loop lebt; Silentium trotz Wach + ~ds = Loop tot → Reboot + ~ds neu, User-Job). (2) Optional: n8n-Grayscale (T18) erst nach T19 (API key 401). (3) Invarianten: SHA Repo == Karte (aktives Set: refresh.sh 514a37ac…, dashboard.png ce561a6c…, .boot fd4501a8…, binaries/dash 58f751e4…, refresh.log daa8cf1f…, diag.log 119a6b99…); nach jedem State-Change resume + updated_at im selben Commit."
+    "state": "PAUSE (25.09 ~01:25 CEST). T21 done (s=0.95 final, round 3, user: „perfekt“). Alles committed + pushed (7d18a03). Repo == card: aktives Set bit-identisch (refresh.sh v6 514a37ac… 3,913 B rwx------ / dashboard.png ce561a6c… 463,592 B ct0 1-IDAT / refresh.log daa8cf1f… 264 ln / diag.log 119a6b99… 322 ln / .boot fd4501a8… / binaries/dash 58f751e4… = on-card dash). Loop still silent since 22:11:12Z (checked 22:33:32Z; expected dls ~22:16/~22:21 missing; no reboot since 21:55:14Z; no internal death path) → deep-sleep freeze assumed (resume-on-wake verified 24.09); externally killed = alternative; undecidable from Mac. ~ds user-verified (reboot cancels; user re-enters). Two pending user questions: (1) device state (awake with ~ds? → wait ~10 min, re-check refresh.log: new dl line = alive; silent + awake = dead → user reboots + re-enters ~ds); (2) T17 final: flicker acceptable? (render only on image change → static feed = no render/flicker). If flicker OK + loop alive → T17 done (user-verified) → DoD item 6 complete → milestone T12–T17 done. T18/T19 blocked on user n8n API key (401).",
+    "how_to_resume": "User on break (25.09). On return: ask the two pending questions (device state / loop alive? + flicker acceptable?). If flicker OK and loop alive (or user rebooted + re-entered ~ds): T17 → done (user-verified); update AGENTS.md DoD item 6, ISSUES.md I10 (flicker resolved: render only on image change), todos.json → milestone T12–T17 complete. Remaining: T18/T19 (n8n grayscale, user API key required). Display verification only by user."
   },
   "todos": [
     {
