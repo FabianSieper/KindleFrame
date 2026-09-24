@@ -1,6 +1,14 @@
 package main
 
-import "image"
+import (
+	"bytes"
+	"compress/zlib"
+	"encoding/binary"
+	"fmt"
+	"hash/crc32"
+	"image"
+	"os"
+)
 
 // toGray converts an image to 8bpp grayscale (ITU-R BT.601 luma)
 // with Floyd-Steinberg error diffusion.
@@ -113,4 +121,54 @@ func transpose(pix []byte, w, h int) []byte {
 		}
 	}
 	return out
+}
+
+// saveKindlePNG writes 8-bit grayscale pixels (row-major, w*h bytes) as a PNG
+// the Kindle's eips accepts: IHDR color type 0 (grayscale) and exactly ONE IDAT
+// chunk, a single compress/zlib stream over all filter-0 rows. image/png cannot
+// do this (it splits the stream into ~32 KB blocks, 48 IDAT for a full frame);
+// eips drops all but the first IDAT, so the chunks are written by hand.
+func saveKindlePNG(path string, w, h int, gray []byte) error {
+	if len(gray) != w*h {
+		return fmt.Errorf("saveKindlePNG: need %d bytes, got %d", w*h, len(gray))
+	}
+	raw := make([]byte, 0, h*(w+1))
+	for y := 0; y < h; y++ {
+		raw = append(raw, 0)
+		raw = append(raw, gray[y*w:(y+1)*w]...)
+	}
+	var idat bytes.Buffer
+	zw := zlib.NewWriter(&idat)
+	if _, err := zw.Write(raw); err != nil {
+		zw.Close()
+		return err
+	}
+	if err := zw.Close(); err != nil {
+		return err
+	}
+	ihdr := make([]byte, 13)
+	binary.BigEndian.PutUint32(ihdr[0:4], uint32(w))
+	binary.BigEndian.PutUint32(ihdr[4:8], uint32(h))
+	ihdr[8] = 8
+	ihdr[9] = 0
+	var buf bytes.Buffer
+	buf.Write([]byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a})
+	writePNGChunk(&buf, "IHDR", ihdr)
+	writePNGChunk(&buf, "IDAT", idat.Bytes())
+	writePNGChunk(&buf, "IEND", nil)
+	return os.WriteFile(path, buf.Bytes(), 0644)
+}
+
+// writePNGChunk appends one PNG chunk: 4-byte big-endian length, type, data,
+// and the CRC-32 (IEEE) over type+data.
+func writePNGChunk(buf *bytes.Buffer, typ string, data []byte) {
+	var b [4]byte
+	binary.BigEndian.PutUint32(b[:], uint32(len(data)))
+	buf.Write(b[:])
+	t := []byte(typ)
+	buf.Write(t)
+	buf.Write(data)
+	var c [4]byte
+	binary.BigEndian.PutUint32(c[:], crc32.ChecksumIEEE(append(t, data...)))
+	buf.Write(c[:])
 }
