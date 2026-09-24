@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T13:21Z",
+  "updated_at": "2026-09-24T13:30Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -11,8 +11,8 @@
   },
   "resume": {
     "next_todo": "T17",
-    "state": "24.09: T16 DONE — final-architecture dash rebuilt with Go 1.23.12 (kernel 3.0.35 compatible): static, stripped, ELF 32-bit ARM EABI5, 5,177,496 B (was 6,291,616 B), SHA ce74c7b4…, committed to artifacts/binaries/dash (replaces the T11-sanitized I10-era build 1d5c8979…). On card (UNCHANGED): refresh.sh v4 pre-T14 (2,720 B) + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. NEXT = T17: announce + copy artifacts/binaries/dash and artifacts/refresh.sh to /Volumes/Kindle (dash size change 6,291,616 → 5,177,496 B triggers the v4 hot re-stage; no reboot needed), then STOP and request user verification (visible? t180 orientation? flicker?) + readbacks /mnt/us/diag.log (eips rc + duration) and /mnt/us/refresh.log (dl ok / render rc). T18/T19 remain blocked on the user's n8n API key (independent track).",
-    "how_to_resume": "1) Announce the write to the live card /Volumes/Kindle (point writes only: dash, refresh.sh — no bulk ops). 2) cp artifacts/binaries/dash artifacts/refresh.sh /Volumes/Kindle/ (card root = /mnt/us; the dash size change triggers the hot re-stage in refresh.sh v4). 3) Update todos.json (T17 in_progress + state) and commit. 4) STOP and ask the user: is the dashboard visible now? Orientation correct (t180 reference = transpose + 180° = 90° CW + horizontal flip)? Flicker acceptable? + have them read back /mnt/us/diag.log (eips rc + duration) and /mnt/us/refresh.log (dl ok, render rc=0). 5) If the display is OK → T17 done (user-verification note) + README current-state table + docs/05 card rows (dash, refresh.sh) in one commit; then revisit T18. If orientation is wrong → re-add the documented t180 (transpose + 180°) in src/kindle-dash, rebuild with the T16 recipe, redeploy. Fallback if eips rc ≠ 0 persists: dash render = write-PNG-only + refresh.sh calls /usr/sbin/eips -g itself (docs/03 fallback). After every state change: update this resume block + updated_at, commit together with the work."
+    "state": "24.09: T17 IN PROGRESS — deploy DONE 13:29 UTC: point-wrote artifacts/binaries/dash (5,177,496 B, ce74c7b4…) + artifacts/refresh.sh (2,599 B, d8d84e99…) to /Volumes/Kindle (= /mnt/us); SHA-verified on card; no other card changes. Device last active today 06:43 UTC (refresh.log + dashboard.png mtimes) → currently off or asleep. The card's .boot hook auto-starts refresh.sh on every boot (docs/02) → deterministic path = user reboots the Kindle: new refresh.sh → stages the new dash → restores cache → boot render = the first eips wave. (If the old loop had still been running, it would have hot-swapped the new dash within ~30–40 s — the old script already calls `dash render` — but the device is inactive, so reboot is the path.) NEXT = user verification (see how_to_resume). T18/T19 remain blocked on the user's n8n API key (independent track).",
+    "how_to_resume": "Waiting on user (T17 final step). 1) User reboots the Kindle (Settings > Power > Restart, or full power cycle) — .boot auto-starts the new refresh.sh. 2) After ~1 min the user reports: dashboard VISIBLE? orientation correct (t180 reference = transpose + 180° = 90° CW + horizontal flip)? flicker acceptable? 3) Meanwhile I read back /Volumes/Kindle/refresh.log ('v4 start', 'boot render rc=') + /Volumes/Kindle/diag.log (eips rc + duration) from the Mac (card stays USB-mounted). 4) If OK → T17 done (user-verification note) + README current-state table + docs/05 card rows (dash + refresh.sh SHAs) in one commit; then revisit T18. If orientation wrong → re-add the documented t180 (transpose + 180°) in src/kindle-dash, rebuild with the T16 recipe (GOTOOLCHAIN=go1.23.12 CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=-s), redeploy, re-verify. Fallback if eips rc ≠ 0 persists: dash render = write-PNG-only + refresh.sh calls /usr/sbin/eips -g itself (docs/03 fallback). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -183,11 +183,11 @@
     {
       "id": "T17",
       "title": "Deploy + user verification (visibility, orientation, flicker) + log check",
-      "status": "open",
+      "status": "in_progress",
       "issue": "I10-6",
       "depends_on": ["T16"],
       "refs": ["docs/03-eink-rendering.md (validation shell + orientation references)", "artifacts/images/orient-test-*.png", "artifacts/refresh.sh"],
-      "details": "Deploy via hot re-stage (refresh.sh v4 size check) + reboot; validate_png on the produced file; user confirms: visible? orientation vs t180 reference? flicker acceptable? Then: refresh.log shows 'dl ok' + 'render rc=0'. On success: update README current-state table + docs (repo wins over Notion)."
+      "details": "Deploy via hot re-stage (refresh.sh v4 size check) + reboot; validate_png on the produced file; user confirms: visible? orientation vs t180 reference? flicker acceptable? Then: refresh.log shows 'dl ok' + 'render rc=0'. On success: update README current-state table + docs (repo wins over Notion). Executed 24.09 13:29 UTC: point-write deploy to /Volumes/Kindle (= /mnt/us) — dash 5,177,496 B (ce74c7b4…, T16 build) + refresh.sh 2,599 B (d8d84e99…, post-T14), SHA-verified on card; device last active 06:43 UTC → pending step = user reboots the Kindle (.boot hook auto-starts refresh.sh)."
     },
     {
       "id": "T18",
