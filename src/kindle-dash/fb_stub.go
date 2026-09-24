@@ -4,6 +4,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 )
 
 // defaultPGM: where display() writes on dev machines (there is no EPDC
@@ -38,24 +39,10 @@ func display(in string) error {
 func writePGM(g []byte, w, h int, path string) error {
 	b := make([]byte, 0, len(g)+32)
 	b = append(b, 'P', '5', '\n')
-	b = append(b, []byte(itoa(w))...)
+	b = append(b, []byte(strconv.Itoa(w))...)
 	b = append(b, ' ')
-	b = append(b, []byte(itoa(h))...)
-	b = append(b, '\n', 255, '\n')
+	b = append(b, []byte(strconv.Itoa(h))...)
+	b = append(b, '\n', '2', '5', '5', '\n')
 	b = append(b, g...)
 	return os.WriteFile(path, b, 0o644)
-}
-
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var b [12]byte
-	i := len(b)
-	for n > 0 {
-		i--
-		b[i] = byte('0' + n%10)
-		n /= 10
-	}
-	return string(b[i:])
 }

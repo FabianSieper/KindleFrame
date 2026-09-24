@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T13:02Z",
+  "updated_at": "2026-09-24T13:07Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T15",
-    "state": "24.09: T14 DONE — fb_linux.go: display(in) = exec.CommandContext (30 s timeout) of /usr/sbin/eips -g <in> -x 0 -y 0; rc (0 / *exec.ExitError code / -1 on launch error or timeout) + duration ALWAYS appended to /mnt/us/diag.log via best-effort diagf() (UTC, failed writes dropped). Deleted: mmap framebuffer path, writeFB, DASH_FLIPX/Y reads, dead byte-buffer transpose (convert.go). render.go: render(in) = thin display(in) wrapper; committed pngDecode kept. main.go: get() no longer calls render() — get = write-only (fetch→decode→grayscale→single-IDAT PNG), render = the one EPDC wave per cycle (driven by refresh.sh); CLI render takes exactly 1 arg. fb_stub.go (non-linux dev): display → P5 PGM to /tmp/dash-out.pgm (DASH_FB override). artifacts/refresh.sh: comments-only T14 update (2,599 B, SHA d8d84e99…; call pattern byte-stable; on-card copy stays pre-T14 2,720 B until T17). Docs synced (docs/03 plan 1-5 ✅, ISSUES I10 items 1-3 done, README/AGENTS actual state, docs/05 v4 behavior rewritten). LOCAL verification green (build/vet/test, darwin + linux/arm cross-compile, DASH_FB stub smoke). UNVERIFIED on device (T17): eips exec rc, diag.log, user display check (visible / t180 orientation / flicker). On card (unchanged): refresh.sh v4 pre-T14 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent).",
-    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T15 (fb_stub.go cleanup: hand-written itoa → strconv.Itoa, drop dead branches, keep DASH_FB PGM override; re-verify gofmt/build/vet/test + linux/arm cross-compile sanity + DASH_FB smoke). Then T16 (GOTOOLCHAIN=go1.23.x CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=-s; verify static ARM via file/go version, no /Users in strings, size < ~7 MB vs T13 baseline 6,357,152 B; replace artifacts/binaries/dash + docs/05 SHA in the same commit). Then T17 (announce card write; cp new dash + updated refresh.sh → /Volumes/Kindle; hot re-stage on size change, no reboot needed; STOP and request user verification: visible? t180 orientation? flicker? + readbacks /mnt/us/diag.log (eips rc) and /mnt/us/refresh.log (dl ok / render rc)). Fallback if eips rc≠0 persists: dash write-PNG-only + refresh.sh calls /usr/sbin/eips itself (docs/03 fallback). After T17 success: update README current-state + docs (repo wins over Notion). After every state change: update this resume block + updated_at, commit together with the work."
+    "next_todo": "T16",
+    "state": "24.09: T15 DONE — fb_stub.go (!linux dev) final state: display(in) = ReadFile → pngDecode → toGray → writePGM (P5) to /tmp/dash-out.pgm (DASH_FB override kept). T15 cleanup: hand-written itoa → strconv.Itoa (dead DASH_FLIPX/Y branches were already dropped with the mmap path in T14). Bugfix found while verifying: P5 maxval was written as a raw 0xFF byte (no parser accepts that — PIL rejects it) → now ASCII '255' (17 B header + w×h raster). Verified: gofmt clean, go build/vet/test -count=1 green (darwin), linux/arm GOARM=7 cross-compile OK, DASH_FB smoke → 1,552,273 B PGM that PIL opens (1072,1448, mode L). UNVERIFIED on device (T17): eips exec rc, diag.log, user display check (visible / t180 orientation / flicker). On card (unchanged): refresh.sh v4 pre-T14 (2,720 B) + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent).",
+    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T16 (resolve newest go1.23.x patch — e.g. `go list -m -versions golang.org/toolchain` via proxy; GOTOOLCHAIN=go1.23.x CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=-s; verify static ARM via file + `go version <bin>`, no /Users in strings, size < ~7 MB vs T13 baseline 6,357,152 B; replace artifacts/binaries/dash + docs/05 SHA + todos.json in one commit). Then T17 (announce card write; cp new dash + updated refresh.sh → /Volumes/Kindle; hot re-stage on size change, no reboot needed; STOP and request user verification: visible? t180 orientation? flicker? + readbacks /mnt/us/diag.log (eips rc) and /mnt/us/refresh.log (dl ok / render rc)). Fallback if eips rc≠0 persists: dash write-PNG-only + refresh.sh calls /usr/sbin/eips itself (docs/03 fallback). After T17 success: update README current-state + docs (repo wins over Notion). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -161,11 +161,13 @@
     {
       "id": "T15",
       "title": "fb_stub.go: PGM output for development on the Mac",
-      "status": "open",
+      "status": "done",
       "issue": "I10-4",
       "depends_on": ["T11"],
       "refs": ["AGENTS.md (Definition of Done 4 context)"],
-      "details": "Build tag for non-linux: render path writes a PGM the developer can inspect; removes dead env-var branches (DASH_FLIPX/Y)."
+      "details": "fb_stub.go (!linux) final state: display(in) = ReadFile → pngDecode → toGray → writePGM (P5) to /tmp/dash-out.pgm (DASH_FB override kept). T15 cleanup: hand-written itoa → strconv.Itoa (the dead DASH_FLIPX/Y branches were already removed with the mmap path in T14). Bugfix found during verification: the P5 maxval was written as a raw 0xFF byte (no standard parser accepts that — PIL rejects it) → now ASCII '2','5','5' (17 B header + w×h raster).",
+      "done_at": "2026-09-24",
+      "verification": "gofmt clean; go build ./... + go vet + go test -count=1 PASS (darwin); linux/arm GOARM=7 cross-compile OK. DASH_FB smoke: dash render artifacts/dashboard.png → 1,552,273 B PGM (17 B header + 1,552,256 = 1072×1448 raster); PIL opens it (1072,1448, mode L)."
     },
     {
       "id": "T16",
