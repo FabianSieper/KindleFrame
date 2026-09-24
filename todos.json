@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T12:20Z",
+  "updated_at": "2026-09-24T12:48Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T13",
-    "state": "24.09: T12 DONE — saveKindlePNG + writePNGChunk implemented in src/kindle-dash/convert.go (manual PNG: SIG + IHDR bd=8 ct=0 interlace=0 + ONE compress/zlib IDAT over all filter-0 rows + CRC32 IEEE; NOT image/png). Self-test in convert_test.go PASS (1 IDAT / bd8 / ct0 / dims + pixel-exact *image.Gray round-trip). docs/03 shell validator passes on a 1072×1448 sample; Python reference golden: Go raw scanlines byte-identical to save_kindle_png. linux/arm GOARM=7 build still 6,291,616 B (= reference; saveKindlePNG is dead code until T13 wires it in). On card (unchanged): refresh.sh v4 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent of T13-T17).",
-    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T13 (main.go get(): drop all rotation/mirror handling of the INPUT — the image arrives pre-oriented from n8n; keep fetch, decode, grayscale/downscale, quantize; DASH_FLIPX/Y become obsolete; wire the output through saveKindlePNG so the arm build now includes it and size grows past 6.29 MB). Prereqs T11+T12 done. After T13: T14 (fb display → exec eips -g), T15 (PGM stub), then T16 (Go ≤1.23 static build + size check), T17 (deploy + USER verification — the only display checks that count). After T17 proves the device path, revisit T18 (still blocked on T19 API key). After every state change: update this resume block + updated_at, commit together with the work."
+    "next_todo": "T14",
+    "state": "24.09: T13 DONE — main.go get() now wires fetch→pngDecode→toGray (device-side Floyd-Steinberg 8-bit)→kindlePNG (T12 single-IDAT builder)→atomic write to <out>.png→render(); get() applies NO device-side rotation/mirror (image arrives pre-oriented from n8n; the remaining device-side transpose/DASH_FLIPX/Y live in fb_linux.go writeFB and are dropped with the mmap path in T14/T15). convert.go: saveKindlePNG refactored to delegate to a new kindlePNG(w,h,gray) []byte builder (shared path; keeps the len check + os.WriteFile). TestGet added (httptest 1072×1448). linux/arm GOARM=7 build now 6,357,152 B (was 6,291,616; kindlePNG no longer dead code → +65,536 B). On card (unchanged): refresh.sh v4 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent of T14-T17).",
+    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T14 (fb_linux.go: replace the mmap framebuffer write/display path with `exec /usr/sbin/eips -g <file> -x 0 -y 0`; drop transpose + DASH_FLIPX/Y; log the exec rc to diag.log; RISK: a static binary may lack permission to exec eips (AppArmor/seccomp) — fallback = dash stops at write-PNG-only and refresh.sh itself calls eips afterwards). Then T15 (fb_stub.go PGM for Mac dev), T16 (Go ≤1.23 + -trimpath static build + size check vs 6.29 MB), T17 (deploy + USER verification — the only display checks that count). After T17 proves the device path, revisit T18 (still blocked on T19 API key). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -139,11 +139,13 @@
     {
       "id": "T13",
       "title": "main.go get(): remove all rotation/mirror code (image arrives pre-oriented from n8n)",
-      "status": "open",
+      "status": "done",
       "issue": "I10-2",
       "depends_on": ["T11"],
-      "refs": ["AGENTS.md (Definition of Done 2)", "docs/03-eink-rendering.md"],
-      "details": "Keep: fetch, decode, grayscale, downscale, quantize. Drop: rotation/mirror handling of the input (DASH_FLIPX/DASH_FLIPY become obsolete). Output geometry 1072×1448."
+      "refs": ["AGENTS.md (Definition of Done 2)", "docs/03-eink-rendering.md", "src/kindle-dash/main_test.go"],
+      "details": "get() now wires the fetched+decoded image through toGray (device-side Floyd-Steinberg 8-bit) → kindlePNG (the T12 single-IDAT builder) → atomic write to <out>.png, then render() for immediate display. NO rotation/mirror is applied in get() (image arrives pre-oriented from n8n; the remaining device-side transpose/DASH_FLIPX/Y live in fb_linux.go writeFB and are dropped with the mmap path in T14/T15). convert.go: saveKindlePNG refactored to delegate to a new kindlePNG(w,h,gray) []byte builder (keeps the len check + os.WriteFile) so get() and saveKindlePNG share one PNG path. Added skip-if-unchanged (bytes.Equal on the generated bytes) + atomic tmp+rename. Output geometry stays 1072×1448.",
+      "done_at": "2026-09-24",
+      "verification": "go vet clean; go test PASS (incl. new TestGet: httptest-served 1072×1448 RGB → get() → single-IDAT / colortype 0 / bitdepth 8 / correct dims / pixel-exact vs toGray). docs/03 shell validator on the 1072×1448 sample: 1 IDAT, bd8, ct0, interlace 0, 1,553,704 raw scanline bytes; decompressed scanlines byte-identical to the Python save_kindle_png reference (full file differs only in the zlib stream — Go's compress/zlib vs C zlib — which eips never reads raw). linux/arm GOARM=7 build now 6,357,152 B (was 6,291,616 B; kindlePNG no longer dead code → +65,536 B). Output stays 1072×1448, no device-side orientation."
     },
     {
       "id": "T14",

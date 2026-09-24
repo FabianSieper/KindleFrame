@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -95,13 +96,16 @@ func get(out string, urls []string) error {
 			lastErr = fmt.Errorf("%s: decode: %w", u, err)
 			continue
 		}
-		_ = img
+		b := img.Bounds()
+		w, h := b.Dx(), b.Dy()
+		gray := toGray(img)
+		nb := kindlePNG(w, h, gray)
 		old, oerr := os.ReadFile(out)
-		if oerr == nil && string(old) == string(data) {
+		if oerr == nil && bytes.Equal(old, nb) {
 			return nil
 		}
 		tmp := out + ".tmp"
-		if err := os.WriteFile(tmp, data, 0644); err != nil {
+		if err := os.WriteFile(tmp, nb, 0644); err != nil {
 			return err
 		}
 		if err := os.Rename(tmp, out); err != nil {
