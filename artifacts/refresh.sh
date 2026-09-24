@@ -1,6 +1,10 @@
 #!/bin/sh
-# refresh.sh v4 — Kindle Voyage live dashboard via dash (static Go binary)
-# 10s tick | forced re-render every 30s | download every 300s
+# refresh.sh v5 — Kindle Voyage live dashboard via dash (static Go binary)
+# 10s tick | download every 300s | render ONLY on image change (cksum)
+# NOTE: ticks advance only while the device is AWAKE — in deep sleep the loop
+# freezes between wakes (resumes on wake). For a fresh dashboard keep the
+# device awake: Settings -> Device -> Stay Awake. (User setting only — no
+# verified script-level keep-awake mechanism exists.)
 # dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode to
 #   single-IDAT grayscale PNG — write only, NO display
 # dash render <file>: display the PNG via eips (EPDC wave — the only visible path)
@@ -76,17 +80,20 @@ if [ ! -x "$DASH" ]; then
   log "FATAL: dash binary missing"
   exit 1
 fi
-log "v4 start pid=$$"
+log "v5 start pid=$$"
 
 if [ ! -s "$OUT" ] && [ -s "$CACHE" ]; then
   cp -f "$CACHE" "$OUT"
   log "boot: restored cache"
 fi
 
+RENDERED=
 if png_valid "$OUT"; then
   log "boot render"
   render
-  log "boot render rc=$?"
+  RC=$?
+  log "boot render rc=$RC"
+  [ "$RC" -eq 0 ] && RENDERED=$(cksum "$OUT" 2>/dev/null)
 else
   log "boot: no valid cached image yet"
 fi
@@ -99,12 +106,20 @@ while true; do
   tick=$((tick + 1))
   restage
 
-  if [ $((tick % 3)) -eq 0 ] && png_valid "$OUT"; then
-    render
-  fi
-
   if [ $((tick % 30)) -eq 0 ]; then
     do_download
+    # v5: render only on image change (cksum, v2-proven pattern) — no forced
+    # 30s re-render, so the screen stays still while the feed is unchanged
+    # (no idle flicker). get() writes atomically (tmp+rename), so a changed
+    # $OUT is always complete.
+    NEW=$(cksum "$OUT" 2>/dev/null)
+    if [ -n "$NEW" ] && [ "$NEW" != "$RENDERED" ] && png_valid "$OUT"; then
+      log "image changed, render"
+      render
+      RC=$?
+      log "render rc=$RC"
+      [ "$RC" -eq 0 ] && RENDERED=$NEW
+    fi
   fi
 
   sleep 10

@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T17:42Z",
+  "updated_at": "2026-09-24T20:05Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -11,8 +11,8 @@
   },
   "resume": {
     "next_todo": "T20",
-    "state": "24.09 ~17:42Z: **T20 IN PROGRESS — code + tests + rebuild DONE, deploy PENDING** (the next agent's job = the T20 deploy sequence; T17 also still in progress — final acceptance after T20). DONE this session: (1) src/kindle-dash/convert.go: + scaleLetterbox (downscale to s·w×s·h + center on black at the input's ORIGINAL dims) + bilinearGray = MANUAL clamped bilinear — reason: the hash-verified go1.23.12 tarball (SHA 5bfa117e…, extracted tree == GitHub tag == all local trees) ships a PRE-1.12-era image/draw (5-arg Draw, consts Over/Src only, no Clear, NO scaling ops) → no image/draw import; code against the pinned tree's actual API, not remembered Go. (2) src/kindle-dash/main.go: + dashScale() (env DASH_SCALE, float, default 1.0, clamp [0,1]) + get() wiring (<1 → scaleLetterbox → existing *image.Gray fast path → kindlePNG; output spec UNCHANGED: 1072×1448, 1 IDAT, color type 0, filter 0). (3) Tests + TestScaleLetterbox/TestDashScale/TestGetScaled — ALL 6 PASS (0.417 s, verified toolchain), go vet clean. (4) Rebuild (verified tarball tree, env -u GOROOT + GOTOOLCHAIN=local, CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7, -trimpath -ldflags=-s) → artifacts/binaries/dash = 5,177,496 B, SHA-256 58f751e4…, ELF 32-bit ARM EABI5 static stripped, go version = go1.23.12. GOTCHA: T20 size == T16 size (5,177,496 B) → the size-based hot re-stage in refresh.sh will NOT detect the live swap; the BOOT re-stage (tmpfs empty after reboot) is the effective path — every deploy includes a reboot; documented as a NOTE comment in refresh.sh. (5) artifacts/refresh.sh: + export DASH_SCALE=0.8 + restage NOTE comment → now 2,900 B, SHA-256 b7e31438… (card still 2,599 B d8d84e99… since T17). (6) Stray untracked src/kindle-dash/dash (Mach-O arm64 by-product, 7,566,162 B) deleted. ON CARD (unchanged): dash = T16 build ce74c7b4… + refresh.sh 2,599 B d8d84e99… (deployed 24.09 13:29Z); user reboot ~14:19Z, logs green; card dashboard.png = RGB ct 2 / 25 IDAT, SHA cbf48177… (T17-boot render faithful-vs-crop still [open]). USER VERIFICATION round 1 (24.09): visible ✅, orientation ✅ (t180), size ❌ (edge-to-edge, „too big“), flicker UNREPORTED. T18/T19 remain blocked on the user's n8n API key (401) — independent track.",
-    "how_to_resume": "Continue = the T20 DEPLOY SEQUENCE (code + build are done and re-verified — do NOT rebuild). 1) ANNOUNCE the deploy to the user: point-writes to /Volumes/Kindle = dash (5,177,496 B, SHA 58f751e4…, replaces the T16 ce74c7b4…) + refresh.sh (2,900 B, SHA b7e31438…, replaces 2,599 B d8d84e99…); note the same-size-dash gotcha (the size-based hot re-stage will NOT fire; the boot re-stage at reboot is the effective path — a reboot is required anyway) + get EXPLICIT authorization before touching the live card. 2) On OK: point-write both to /Volumes/Kindle, SHA-verify on card, commit the todos deploy note (T20 details + resume + updated_at in the same commit). 3) Ask the user: reboot the Kindle + wait ~5–6 min (the first scaled image appears at the FIRST RE-DOWNLOAD with the T20 binary; the boot render shows the old full-bleed cache) and report: size ok now? margin acceptable? flicker? + clarify (a) wanted black margin vs (b) n8n canvas content zoomed (→ n8n-side fix, I8). Optional quick win before the reboot: pre-scale the on-card cache on the Mac so even the boot render is scaled. 4) Log analysis (refresh.log: dl ok + render rc=0; diag.log: eips rc/durations) + on user confirmation: close T20 AND T17 (verification notes „user verified …“) + README/docs update in the same commit. Then revisit T18 (still blocked on T19: n8n API key 401). After every state change: update this resume block + updated_at, commit together with the work."
+    "state": "24.09 ~20:05Z: **T20 IN PROGRESS — code + build + refresh.sh v5 + docs DONE, deploy PENDING (user's explicit point-write OK outstanding)**. 24.09 pm = card-log diagnosis done: `diag.log` holds exactly **6 `eips rc=` lines, all 24.09** (14:18:23 / 14:19:50 / 14:20:14 / 18:11:26 / 18:13:12 / 18:13:35), **zero overnight** (old pre-T14 script + 6.29 MB mmap dash → invisible writes). The frame the user now sees = the eips **zoom-crop (docs/03 row 2) of the stale 06:43 RGB/25-IDAT cache** (user: „bild nur teilweise zu sehen“, „kleiner Ausschnitt … untere linke Ecke“); the round-1 „edge-to-edge, too big“ was the older full-size v2/v3-era grayscale frame (still on screen pre-reboot) → faithful-vs-zoom-crop **[resolved: zoom-crop]**. **No grayscale single-IDAT image has ever been eips-rendered on this device** — the first grayscale render happens post-deploy, at the first re-download. **Deep-sleep finding:** the refresh loop freezes while the device deep-sleeps (ticks advance only while awake; the frozen loop resumes on wake) → with normal sleep/wake use tick 30 (300 s) is rarely reached → effectively no downloads. **refresh.sh v5 (repo, 24.09 pm):** 3,702 B / SHA `9cb8dcfc…` — render **only on image change** (cksum, v2-proven), forced 30 s tick re-render removed (was the only post-boot render source → idle flicker), `DASH_SCALE=0.8` + restage NOTE kept, keep-awake NOTE (user setting only). Deploy = announced point-writes `dash` (T20, 5,177,496 B, `58f751e4…`) + `refresh.sh` v5 (3,702 B, `9cb8dcfc…`) to /Volumes/Kindle + user reboot (effective trigger: v5's size change → script hot re-stage; dash same size → blind).",
+    "how_to_resume": "Continue = the T20 DEPLOY SEQUENCE (code + build + v5 + docs done — do not redo). 1) Wait for the user's explicit point-write OK (deploy is conditional on it — the user answered a/b but did NOT explicitly authorize the writes) + the 4 perception questions already asked (open /Volumes/Kindle/dashboard.png in Preview: full image or already a crop, what content? · does the Kindle view match that file? · did you wake/reboot the device ~18:11–18:13 (local)? · is „Wach bleiben“ (Stay Awake) ON?). 2) On OK: announce + point-write /Volumes/Kindle/dash = artifacts/binaries/dash (5,177,496 B, SHA 58f751e4f158fb9e97552aa186cdabb6926e3033418c2f1546a3499f03641644) + /Volumes/Kindle/refresh.sh = artifacts/refresh.sh (3,702 B, SHA 9cb8dcfc0d5276f28b837f5b53419e5acbd44be8b6128ff2d62e20c978e6bbcd); SHA-verify repo == card; commit German deploy note (T20 prefix, todos.json in the same commit). 3) User: reboot the device + enable „Wach bleiben“ + keep it awake ~10 min (first download at tick 30 = 300 s accumulated awake; the first SCALED image appears at the first re-download — the boot render still shows the zoom-crop of the stale cache). 4) Log check: refresh.log (dl ok + image changed, render + render rc=0) + diag.log (new `eips rc=` line). 5) User verification: whole image visible? black bars? flicker acceptable? 6) Close T20 AND T17 in one German commit („user verified …“ notes) + todos.json in the same commit. Then revisit T18 (still blocked on T19: n8n API key 401). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -20,7 +20,10 @@
       "title": "Jailbreak Kindle Voyage (WatchThis legacy + custom hotfix bin)",
       "status": "done",
       "issue": "I4",
-      "refs": ["docs/02-jailbreak.md", "artifacts/jailbreak/"],
+      "refs": [
+        "docs/02-jailbreak.md",
+        "artifacts/jailbreak/"
+      ],
       "details": "WatchThis release tree + custom hotfix (SP01, SHA 2102e30f…) installed 21.09.2026. ROM stays read-only; exec from FAT not possible (drives T04). No 5.14+ update (breaks chain).",
       "done_at": "2026-09-21",
       "verification": "hotfix bin on card, .boot + refresh.sh run after reboot, capability est. 100% (MRPI logs)"
@@ -30,7 +33,10 @@
       "title": "Network PoC: device reaches n8n webhook (wget)",
       "status": "done",
       "issue": "I4",
-      "refs": ["artifacts/logs/http-test.log", "docs/04-n8n-integration.md"],
+      "refs": [
+        "artifacts/logs/http-test.log",
+        "docs/04-n8n-integration.md"
+      ],
       "details": "BusyBox wget from device to the n8n webhook over LAN; binary response readable on card.",
       "done_at": "2026-09-21",
       "verification": "wget PoC green, HTTP 200 + PNG bytes on card"
@@ -40,7 +46,10 @@
       "title": "Static ARM Go binary dash (cross-compiled, CGO off)",
       "status": "done",
       "issue": "I1",
-      "refs": ["artifacts/binaries/dash", "docs/01-hardware.md"],
+      "refs": [
+        "artifacts/binaries/dash",
+        "docs/01-hardware.md"
+      ],
       "details": "Static linux/arm binary, runs on kernel 3.0.35. Source on the user's machine (canonical repo-relative location: `src/kindle-dash/`), not in repo yet — see T11.",
       "done_at": "2026-09-22",
       "verification": "deployed + executed on device (SHA e2732446…, 6,291,616 B)"
@@ -50,7 +59,9 @@
       "title": "Exec-from-FAT problem: stage to /tmp, re-stage on size change",
       "status": "done",
       "issue": "I1",
-      "refs": ["artifacts/refresh.sh"],
+      "refs": [
+        "artifacts/refresh.sh"
+      ],
       "details": "refresh.sh v4: size check → re-stage dash to /tmp (tmpfs) → run. Makes future dash replacements hot-swappable without reboot choreography.",
       "done_at": "2026-09-24",
       "verification": "refresh.sh v4 (2,720 B, SHA b1c06190…) live on card, cycles clean in refresh.log"
@@ -60,7 +71,10 @@
       "title": "Identify eips -g as render path + prove the two hard requirements",
       "status": "done",
       "issue": "I5",
-      "refs": ["docs/03-eink-rendering.md", "artifacts/images/"],
+      "refs": [
+        "docs/03-eink-rendering.md",
+        "artifacts/images/"
+      ],
       "details": "eips -b = NO-OP on KV. eips -g: (1) IHDR color type MUST be 0 (grayscale), (2) exactly 1 IDAT (first chunk read, rest dropped → zoomed crop). Supersedes the afternoon 'accepts 8-bit RGB' belief via controlled 32×32 experiment.",
       "done_at": "2026-09-23",
       "verification": "controlled 8×8/32×32 + 3,697 B full-frame tests pixel-exact; broken cases preserved (dashboard-real.png.bak, webhook captures)"
@@ -70,7 +84,9 @@
       "title": "v1 unattended refresh loop (wget + eips, ~1 min cycle)",
       "status": "done",
       "issue": "I3",
-      "refs": ["artifacts/refresh.sh.bak-v1"],
+      "refs": [
+        "artifacts/refresh.sh.bak-v1"
+      ],
       "details": "First live loop; worked unattended. Superseded by v3/v4 (kept for history).",
       "done_at": "2026-09-22",
       "verification": "ran unattended on device (superseded, not a failure)"
@@ -80,7 +96,11 @@
       "title": "n8n code node t180 (gold code, sandbox-verified byte-exact)",
       "status": "done",
       "issue": "I2",
-      "refs": ["n8n/code/t180-n8n.js", "docs/04-n8n-integration.md", "artifacts/images/golden_t180.png"],
+      "refs": [
+        "n8n/code/t180-n8n.js",
+        "docs/04-n8n-integration.md",
+        "artifacts/images/golden_t180.png"
+      ],
       "details": "t180-n8n.js (14,565 B, SHA 76f8f8b2…) implements transpose+180° in the code node; verified byte-exact vs golden in the n8n sandbox. NEVER deployed (API key 401 → T19). Orientation therefore still handled on device side.",
       "done_at": "2026-09-23",
       "verification": "28,052,160-pixel comparison PASS in sandbox; deploy blocked (T19)"
@@ -90,7 +110,9 @@
       "title": "Working-buffer analysis (fb0 dump, plane/stride, 16 px drift)",
       "status": "done",
       "issue": "I8",
-      "refs": ["docs/03-eink-rendering.md"],
+      "refs": [
+        "docs/03-eink-rendering.md"
+      ],
       "details": "fb0 = 2 planes (3,104,512 B = 1072×2896, 16-bit LE); pre-FLASH dump: 4 values {0x3de, 0x3c0, 0x1e, 0x0}; agreement ~0.86; ~16 px/row drift (1072 vs 1088 stride); shear simulation gives no improvement → NO shear in production path.",
       "done_at": "2026-09-23",
       "verification": "eips -k dump analysis (documented in docs/03); decision: go through eips, no offset hacks"
@@ -100,7 +122,10 @@
       "title": "v3 Mac-proxy architecture + bistable dashboard.png visible",
       "status": "done",
       "issue": "I9",
-      "refs": ["artifacts/refresh.sh.bak-v3", "artifacts/dashboard.png"],
+      "refs": [
+        "artifacts/refresh.sh.bak-v3",
+        "artifacts/dashboard.png"
+      ],
       "details": "Mac proxy served the image; eips -g rendered it each cycle. Kept the Mac in the loop permanently → superseded by final architecture (T12-T17). Currently visible image is the bistable remainder of this phase.",
       "done_at": "2026-09-23",
       "verification": "user-visible dashboard (superseded by design, not by failure)"
@@ -110,7 +135,10 @@
       "title": "Final architecture decision: device-side grayscale + single-IDAT + eips",
       "status": "done",
       "issue": "I10",
-      "refs": ["ISSUES.md", "docs/03-eink-rendering.md"],
+      "refs": [
+        "ISSUES.md",
+        "docs/03-eink-rendering.md"
+      ],
       "details": "dash = fetch + Go decode + Floyd-Steinberg + saveKindlePNG → /mnt/us/dashboard.png; display = exec eips -g (30 s), download 300 s. n8n stays RGB (converted on device).",
       "done_at": "2026-09-24",
       "verification": "decided 24.09 after T08 working-buffer analysis; plan fixed at I10 steps 1-7"
@@ -122,7 +150,11 @@
       "issue": "I10",
       "done_at": "2026-09-24",
       "verification": "All 6 files present in src/kindle-dash/ and byte-match the Notion Artifacts canonical sizes (go.mod 20, main.go 2695, render.go 416, convert.go 2604, fb_linux.go 2322, fb_stub.go 511). go vet clean; compiles for darwin (local) + linux/arm GOARM=7 (device arch); the linux/arm build is 6,291,616 B = the EXACT size of the deployed reference binary. convert.go 1-byte loss at the Teil A/B join found + fixed (2603→2604, blank line before errA restored per Notion Teil B). A fresh build's SHA differs from the reference only because it was built with go1.27.1 and no -trimpath — T16 rebuilds with Go ≤1.23 + -trimpath. Gold-standard confirmation = byte-diff vs the user's Mac originals (Notion storage is lossy: trailing newlines stripped).",
-      "refs": ["AGENTS.md (actual state, bullet 4)", "artifacts/binaries/dash (reference binary)", "Notion Artifacts page (canonical source)"],
+      "refs": [
+        "AGENTS.md (actual state, bullet 4)",
+        "artifacts/binaries/dash (reference binary)",
+        "Notion Artifacts page (canonical source)"
+      ],
       "details": "Files: go.mod, main.go, render.go, convert.go, fb_linux.go, fb_stub.go (flat layout, no cmd/dash/), transcribed from the Notion Artifacts page (the canonical source; split code blocks rejoined). NOTE: files have NO trailing newline — faithful to the Notion code blocks, which strip the trailing \\n; `gofmt -l` flags all 5 .go files for that single point only (mid-file content is gofmt-clean). Kept faithful (no `gofmt -w`) per the 'must not be invented' rule + documented sizes; gofmt-cleaning (add trailing newlines) is an optional user decision. 24.09: absolute user-specific paths removed from all repo references (user works across machines); canonical location is repo-relative src/kindle-dash/."
     },
     {
@@ -130,9 +162,15 @@
       "title": "Implement saveKindlePNG in convert.go (filter-0 rows → ONE zlib stream → 1 IDAT, color type 0)",
       "status": "done",
       "issue": "I10-1",
-      "depends_on": ["T11"],
+      "depends_on": [
+        "T11"
+      ],
       "done_at": "2026-09-24",
-      "refs": ["docs/03-eink-rendering.md (Python reference = the spec)", "AGENTS.md (Definition of Done 1)", "src/kindle-dash/convert_test.go"],
+      "refs": [
+        "docs/03-eink-rendering.md (Python reference = the spec)",
+        "AGENTS.md (Definition of Done 1)",
+        "src/kindle-dash/convert_test.go"
+      ],
       "details": "saveKindlePNG + writePNGChunk added to convert.go: manual PNG (SIG + IHDR bd=8 ct=0 compression/filter/interlace=0, one IDAT via compress/zlib over all filter-0 rows, CRC32 IEEE), NOT image/png (blocks at ~32 KB → 48 IDAT). Self-test in convert_test.go: (a) 64×32 gradient — chunk walk asserts exactly 1 IDAT, bitdepth 8, colortype 0, correct dims, and a pixel-exact round-trip via *image.Gray; (b) 1072×1448 sample dump for external validation.",
       "verification": "go vet clean; go test PASS; darwin build compiles; linux/arm GOARM=7 build = 6,291,616 B = the EXACT deployed-reference size (saveKindlePNG is dead code until T13 wires it in → linker eliminates it, binary size unchanged). docs/03 shell validator on the 1072×1448 sample: size 1072×1448, bitdepth 8, colortype 0, 1 IDAT, raw scanline bytes 1,553,704 = 1448×(1072+1). Python reference golden (save_kindle_png on identical input): Go-decompressed raw scanlines are BYTE-IDENTICAL to the reference (full file differs only in the zlib stream, which eips never reads raw)."
     },
@@ -141,8 +179,14 @@
       "title": "main.go get(): remove all rotation/mirror code (image arrives pre-oriented from n8n)",
       "status": "done",
       "issue": "I10-2",
-      "depends_on": ["T11"],
-      "refs": ["AGENTS.md (Definition of Done 2)", "docs/03-eink-rendering.md", "src/kindle-dash/main_test.go"],
+      "depends_on": [
+        "T11"
+      ],
+      "refs": [
+        "AGENTS.md (Definition of Done 2)",
+        "docs/03-eink-rendering.md",
+        "src/kindle-dash/main_test.go"
+      ],
       "details": "get() now wires the fetched+decoded image through toGray (device-side Floyd-Steinberg 8-bit) → kindlePNG (the T12 single-IDAT builder) → atomic write to <out>.png, then render() for immediate display. NO rotation/mirror is applied in get() (image arrives pre-oriented from n8n; the remaining device-side transpose/DASH_FLIPX/Y live in fb_linux.go writeFB and are dropped with the mmap path in T14/T15). convert.go: saveKindlePNG refactored to delegate to a new kindlePNG(w,h,gray) []byte builder (keeps the len check + os.WriteFile) so get() and saveKindlePNG share one PNG path. Added skip-if-unchanged (bytes.Equal on the generated bytes) + atomic tmp+rename. Output geometry stays 1072×1448.",
       "done_at": "2026-09-24",
       "verification": "go vet clean; go test PASS (incl. new TestGet: httptest-served 1072×1448 RGB → get() → single-IDAT / colortype 0 / bitdepth 8 / correct dims / pixel-exact vs toGray). docs/03 shell validator on the 1072×1448 sample: 1 IDAT, bd8, ct0, interlace 0, 1,553,704 raw scanline bytes; decompressed scanlines byte-identical to the Python save_kindle_png reference (full file differs only in the zlib stream — Go's compress/zlib vs C zlib — which eips never reads raw). linux/arm GOARM=7 build now 6,357,152 B (was 6,291,616 B; kindlePNG no longer dead code → +65,536 B). Output stays 1072×1448, no device-side orientation."
@@ -152,8 +196,13 @@
       "title": "fb_linux.go display(): replace mmap with exec /usr/sbin/eips -g <file> -x 0 -y 0",
       "status": "done",
       "issue": "I10-3",
-      "depends_on": ["T11"],
-      "refs": ["docs/03-eink-rendering.md (eips flag table + open risks)", "AGENTS.md (Definition of Done 3)"],
+      "depends_on": [
+        "T11"
+      ],
+      "refs": [
+        "docs/03-eink-rendering.md (eips flag table + open risks)",
+        "AGENTS.md (Definition of Done 3)"
+      ],
       "details": "fb_linux.go: display(in string) = exec.CommandContext (30 s) of /usr/sbin/eips -g <in> -x 0 -y 0; rc (0 / *exec.ExitError code / -1 on launch error or timeout) + duration ALWAYS appended to /mnt/us/diag.log via new best-effort diagf() (UTC, failed writes dropped). Removed with the mmap path: writeFB, DASH_FLIPX/DASH_FLIPY env reads, and the dead byte-buffer transpose in convert.go. render.go: render(in) is now a thin display(in) wrapper (committed pngDecode kept). main.go: get() no longer calls render() — get = write-only (steps 1-3 of the docs/03 diagram), render = the one EPDC wave per cycle (driven by refresh.sh, call pattern byte-stable); CLI render takes exactly 1 arg (old [fbpath] gone). fb_stub.go (non-linux dev): display → P5 PGM to /tmp/dash-out.pgm (DASH_FB override kept). artifacts/refresh.sh: comments-only update (2,599 B, SHA d8d84e99…, was 2,720 B / b1c06190…). RISK (open until T17): static binary may lack permission to exec eips (AppArmor/seccomp on ROM); rc is logged to diag.log either way; fallback if rc!=0 persists = dash stops at write-PNG-only and refresh.sh itself calls eips (docs/03).",
       "done_at": "2026-09-24",
       "verification": "Local only (darwin): gofmt clean; go build ./... + go vet + go test PASS; linux/arm GOARM=7 cross-compile OK (8.8 MB unstripped under local go1.27 — T16 rebuilds with Go ≤1.23 + -trimpath -ldflags=-s); dev-stub smoke: DASH_FB override → valid P5 PGM, pixel-checked. UNVERIFIED on device (T17): eips exec rc, diag.log contents, user display check (visible / t180 orientation / flicker)."
@@ -163,8 +212,12 @@
       "title": "fb_stub.go: PGM output for development on the Mac",
       "status": "done",
       "issue": "I10-4",
-      "depends_on": ["T11"],
-      "refs": ["AGENTS.md (Definition of Done 4 context)"],
+      "depends_on": [
+        "T11"
+      ],
+      "refs": [
+        "AGENTS.md (Definition of Done 4 context)"
+      ],
       "details": "fb_stub.go (!linux) final state: display(in) = ReadFile → pngDecode → toGray → writePGM (P5) to /tmp/dash-out.pgm (DASH_FB override kept). T15 cleanup: hand-written itoa → strconv.Itoa (the dead DASH_FLIPX/Y branches were already removed with the mmap path in T14). Bugfix found during verification: the P5 maxval was written as a raw 0xFF byte (no standard parser accepts that — PIL rejects it) → now ASCII '2','5','5' (17 B header + w×h raster).",
       "done_at": "2026-09-24",
       "verification": "gofmt clean; go build ./... + go vet + go test -count=1 PASS (darwin); linux/arm GOARM=7 cross-compile OK. DASH_FB smoke: dash render artifacts/dashboard.png → 1,552,273 B PGM (17 B header + 1,552,256 = 1072×1448 raster); PIL opens it (1072,1448, mode L)."
@@ -174,8 +227,17 @@
       "title": "Static ARM build (Go ≤ 1.23) + size check",
       "status": "done",
       "issue": "I10-5",
-      "depends_on": ["T12", "T13", "T14", "T15"],
-      "refs": ["AGENTS.md (hard technical rules, Go cap)", "artifacts/binaries/dash", "docs/05-artifact-manifest.md"],
+      "depends_on": [
+        "T12",
+        "T13",
+        "T14",
+        "T15"
+      ],
+      "refs": [
+        "AGENTS.md (hard technical rules, Go cap)",
+        "artifacts/binaries/dash",
+        "docs/05-artifact-manifest.md"
+      ],
       "details": "CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags=\"-s\". Go 1.24+ FORBIDDEN (needs Linux ≥3.2; device 3.0.35). Compare size to 6.29 MB; on success replace artifacts/binaries/dash + update SHA in docs/05. Executed 24.09: newest go1.23.x = go1.23.12 (resolved via the golang.org/toolchain version list); build = GOTOOLCHAIN=go1.23.12 CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=\"-s\" from src/kindle-dash/ (go.mod language 1.21). New binary 5,177,496 B (was 6,291,616 B). docs/05: repo-slot entry rewritten (new size/SHA + provenance, correcting the conflation of the repo slot with the on-card I10 build); stale 'Go source not in repo' row removed (source in src/kindle-dash/ since T11).",
       "done_at": "2026-09-24",
       "verification": "Built with the go1.23.12 toolchain; `go version <bin>` → go1.23.12; `file` → ELF 32-bit LSB executable, ARM, EABI5, statically linked; stripped; 5,177,496 B (under the ~7 MB budget; −1.1 MB vs the I10-era build); `strings` → zero /Users occurrences (-trimpath effective; supersedes the T11 same-size patch); SHA-256 ce74c7b44fe56c1700ced93d097ff09c993956fe1172da3f6f6ad75198f3f942; copied to artifacts/binaries/dash (sha-verified) replacing the previous slot build (1d5c8979…, 6,291,616 B). Pre-rebuild checks green: gofmt clean, go build/vet/test -count=1 (darwin), linux/arm GOARM=7 cross-compile OK. Device behavior UNVERIFIED → T17 (user display check + /mnt/us/diag.log)."
@@ -185,8 +247,14 @@
       "title": "Deploy + user verification (visibility, orientation, flicker) + log check",
       "status": "in_progress",
       "issue": "I10-6",
-      "depends_on": ["T16"],
-      "refs": ["docs/03-eink-rendering.md (validation shell + orientation references)", "artifacts/images/orient-test-*.png", "artifacts/refresh.sh"],
+      "depends_on": [
+        "T16"
+      ],
+      "refs": [
+        "docs/03-eink-rendering.md (validation shell + orientation references)",
+        "artifacts/images/orient-test-*.png",
+        "artifacts/refresh.sh"
+      ],
       "details": "Deploy via hot re-stage (refresh.sh v4 size check) + reboot; validate_png on the produced file; user confirms: visible? orientation vs t180 reference? flicker acceptable? Then: refresh.log shows 'dl ok' + 'render rc=0'. On success: update README current-state table + docs (repo wins over Notion). Executed 24.09 13:29 UTC: point-write deploy to /Volumes/Kindle (= /mnt/us) — dash 5,177,496 B (ce74c7b4…, T16 build) + refresh.sh 2,599 B (d8d84e99…, post-T14), SHA-verified on card; device last active 06:43 UTC → pending step = user reboots the Kindle (.boot hook auto-starts refresh.sh). **Update 24.09 ~14:20 UTC:** user rebooted ~14:19Z → logs GREEN (refresh.log: staged new dash, „v4 start pid=6026“, boot render rc=0 @14:19:50Z; diag.log: eips rc=0, 3.244 s / 2.636 s / 395.8 ms @14:20:14Z → T14 exec-permission risk RESOLVED); no entries after 14:20:14Z [open — device likely sleeping after the user's check; first re-download ~300 s later never observed]. USER VERIFICATION round 1 (24.09): visible ✅, orientation ✅ (t180), size ❌ („füllt den ganzen screen aus, ist aber zu groß“ = edge-to-edge, no margin) → **T20** (DASH_SCALE letterbox); flicker UNREPORTED. Stays in_progress: final acceptance (size + flicker) after T20. Card cache dashboard.png measured 14:57Z = RGB ct 2 / 25 IDAT (doc error corrected in docs/03+05+AGENTS.md; never rendered pre-T16, eips-rendered at this boot — faithful vs crop [open])."
     },
     {
@@ -194,9 +262,13 @@
       "title": "Optional: n8n grayscale code node (replace t180, deliver 1-IDAT grayscale)",
       "status": "open",
       "issue": "I10-7",
-      "depends_on": ["T19"],
+      "depends_on": [
+        "T19"
+      ],
       "block_on": "Code nodes do not execute on this n8n instance (execution error, 0 runs) AND API key 401 — change would have to be made in the UI by the user.",
-      "refs": ["docs/04-n8n-integration.md (open items)"],
+      "refs": [
+        "docs/04-n8n-integration.md (open items)"
+      ],
       "details": "Relieves dash (input already grayscale + 1 IDAT). Only after T17 proves the device path, if still wanted."
     },
     {
@@ -205,7 +277,9 @@
       "status": "blocked",
       "issue": "I6",
       "block_on": "User must provide/rotate a working API key in the n8n instance; everything else (sanitizing procedure, target nodes) is documented in docs/04.",
-      "refs": ["docs/04-n8n-integration.md"],
+      "refs": [
+        "docs/04-n8n-integration.md"
+      ],
       "details": "Unblocks T18 and any future workflow change without the UI."
     },
     {
@@ -213,9 +287,16 @@
       "title": "DASH_SCALE: downscale + black letterbox (user 24.09: frame edge-to-edge, „too big“)",
       "status": "in_progress",
       "issue": "I10",
-      "depends_on": ["T17"],
-      "refs": ["src/kindle-dash/main.go (get())", "src/kindle-dash/convert.go (toGray *image.Gray fast path, kindlePNG)", "artifacts/refresh.sh", "docs/03-eink-rendering.md (Open display-side)"],
-      "details": "User verification 24.09: visible ✅, orientation ✅, size ❌ — „füllt den ganzen screen aus, ist aber zu groß“ (edge-to-edge, no margin). **AS BUILT (24.09, code + tests + rebuild DONE):** convert.go: + scaleLetterbox (downscale to s·w×s·h + center on black at the input's ORIGINAL dims) + bilinearGray (MANUAL clamped bilinear — the hash-verified go1.23.12 image/draw has NO scaling ops: 5-arg Draw, Over/Src, no Clear → no image/draw import; code written against the pinned tree's API, not remembered Go); main.go: + dashScale() (env DASH_SCALE, float, default 1.0, clamp [0,1]) + get() wiring (<1 → scaleLetterbox → existing *image.Gray fast path in toGray → kindlePNG; output spec UNCHANGED: 1072×1448, 1 IDAT, color type 0, filter 0); tests + TestScaleLetterbox/TestDashScale/TestGetScaled (ALL 6 PASS, 0.417 s, verified toolchain; go vet clean); rebuild artifacts/binaries/dash = 5,177,496 B, SHA-256 58f751e4… (Go 1.23.12 static ARM) — SAME SIZE as the T16 build → size-based hot re-stage won't fire, boot re-stage at reboot = effective path (NOTE comment added to refresh.sh); refresh.sh: + export DASH_SCALE=0.8 (start value; later retunes = edit + redeploy refresh.sh ONLY) + restage NOTE comment → now 2,900 B, SHA b7e31438…. **REMAINING (deploy):** announce → user-authorized point-write dash + refresh.sh to /Volumes/Kindle → SHA-verify on card → user reboot + wait ~5–6 min for the FIRST RE-DOWNLOAD (the boot render shows the old full-bleed cache — the first scaled image appears only after the first download with the T20 binary) → user reports size + margin + flicker; confirmation closes T20 AND T17 (final acceptance, „user verified …“). Open question for the user: (a) wanted a black margin around a smaller frame, or (b) the n8n canvas content itself renders zoomed (→ fix belongs in the n8n workflow, I8). Optional quick win: pre-scale the on-card cache on the Mac so even the boot render is scaled."
+      "depends_on": [
+        "T17"
+      ],
+      "refs": [
+        "src/kindle-dash/main.go (get())",
+        "src/kindle-dash/convert.go (toGray *image.Gray fast path, kindlePNG)",
+        "artifacts/refresh.sh",
+        "docs/03-eink-rendering.md (Open display-side)"
+      ],
+      "details": "User verification 24.09: visible ✅, orientation ✅, size ❌ — „füllt den ganzen screen aus, ist aber zu groß“ (edge-to-edge, no margin). **AS BUILT (24.09, code + tests + rebuild DONE):** convert.go: + scaleLetterbox (downscale to s·w×s·h + center on black at the input's ORIGINAL dims) + bilinearGray (MANUAL clamped bilinear — the hash-verified go1.23.12 image/draw has NO scaling ops: 5-arg Draw, Over/Src, no Clear → no image/draw import; code written against the pinned tree's API, not remembered Go); main.go: + dashScale() (env DASH_SCALE, float, default 1.0, clamp [0,1]) + get() wiring (<1 → scaleLetterbox → existing *image.Gray fast path in toGray → kindlePNG; output spec UNCHANGED: 1072×1448, 1 IDAT, color type 0, filter 0); tests + TestScaleLetterbox/TestDashScale/TestGetScaled (ALL 6 PASS, 0.417 s, verified toolchain; go vet clean); rebuild artifacts/binaries/dash = 5,177,496 B, SHA-256 58f751e4… (Go 1.23.12 static ARM) — SAME SIZE as the T16 build → size-based hot re-stage won't fire, boot re-stage at reboot = effective path (NOTE comment added to refresh.sh); refresh.sh: + export DASH_SCALE=0.8 (start value; later retunes = edit + redeploy refresh.sh ONLY) + restage NOTE comment → now 2,900 B, SHA b7e31438…. **REMAINING (deploy):** announce → user-authorized point-write dash + refresh.sh to /Volumes/Kindle → SHA-verify on card → user reboot + wait ~5–6 min for the FIRST RE-DOWNLOAD (the boot render shows the old full-bleed cache — the first scaled image appears only after the first download with the T20 binary) → user reports size + margin + flicker; confirmation closes T20 AND T17 (final acceptance, „user verified …“). Open question for the user: (a) wanted a black margin around a smaller frame, or (b) the n8n canvas content itself renders zoomed (→ fix belongs in the n8n workflow, I8). Optional quick win: pre-scale the on-card cache on the Mac so even the boot render is scaled. | 24.09 pm (~20:05Z): card-log diagnosis — `diag.log` exactly 6 `eips rc=` lines, all 24.09 (14:18:23 / 14:19:50 / 14:20:14 / 18:11:26 / 18:13:12 / 18:13:35), zero overnight (old pre-T14 script + 6.29 MB mmap dash = invisible writes); the frame the user sees = eips **zoom-crop of the stale 06:43 RGB/25-IDAT cache** („kleiner Ausschnitt … untere linke Ecke“); **no grayscale single-IDAT image ever eips-rendered pre-T20**; deep-sleep finding (loop freezes in device deep sleep, ticks only while awake, resumes on wake). refresh.sh → **v5** (3,702 B, SHA `9cb8dcfc…`): render only on image change (cksum), forced 30 s re-render removed, DASH_SCALE=0.8 + restage + keep-awake NOTE. Deploy (announced point-writes + reboot) + user verification round 2 pending the user's explicit OK."
     }
   ]
 }
