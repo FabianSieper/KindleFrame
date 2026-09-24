@@ -1,6 +1,6 @@
 # 05 — Artifact manifest
 
-Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/` phase + n8n API dumps). Repo total: ~205 files / ~27 MB. All `.png`/`.js`/`.sh`/`.bin`/`.log` copies are bit-identical to their card origin (sizes verified at copy time).
+Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/` phase + n8n API dumps). Repo total: ~205 files / ~27 MB. All `.png`/`.js`/`.sh`/`.bin`/`.log` copies are bit-identical to their card origin (sizes verified at copy time) — **exception: `binaries/dash` is the T16 (24.09) Go 1.23.12 rebuild of the final source, not a card copy** (the card still holds the old mmap build until T17).
 
 ## `artifacts/` — device scripts & binaries (card `/mnt/us/`)
 
@@ -12,7 +12,7 @@ Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/`
 | `.boot` | 510 B | Active boot hook (waits for `eips`+`lipc-set-prop`, starts `refresh.sh`, logs to `/mnt/us/boot.log`) |
 | `reboot.bak` | 7 B | Old reboot hook (kept) |
 | `dash` | 6,291,616 B | Staging binary (v4, mmap). SHA-256 `e27324469c77964c761cfe0a86adb12fb60da370689cfe5f01c4dfba7a63c15d` — **replaced by the I10 build; kept for reference** |
-| `binaries/dash` | 6,291,616 B | Same binary (kept as the canonical slot for the **next** build — I10 step 7). 24.09: embedded build-dir debug strings sanitized from a user-specific absolute path to a generic one (same-size in-place patch, code sections untouched); proper fix = rebuild with `-trimpath` once source is in `src/kindle-dash/` (T11) |
+| `binaries/dash` | 5,177,496 B | **T16 (24.09): final-architecture build with Go 1.23.12** — `CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s"` from `src/kindle-dash/` (static, stripped, ELF 32-bit ARM EABI5; Go 1.23 kernel floor 3.0 → compatible with the Voyage's 3.0.35; `get` = fetch + decode + grayscale → single-IDAT PNG, display = `eips -g` exec, no mmap write). SHA-256 `ce74c7b44fe56c1700ced93d097ff09c993956fe1172da3f6f6ad75198f3f942`; `strings` clean (no embedded build paths — `-trimpath`, supersedes the T11 same-size patch). **Replaces** the previous slot build (6,291,616 B, SHA-256 `1d5c8979e7a01033acee51d18fed8b3b59fb41688e6a89e0c197198d5e791a67` — sanitized copy of the I10-era mmap build; on-card copy = the I10 build `e2732446…`, see the `dash` row). Next deploy = T17 (`dash` + `refresh.sh` are version-locked: deploy both) |
 | `RUNME.sh` | 1,402 B | Card root (legacy, inert). `RUNME-orig.bak` = identical copy |
 | `emergency.sh` | 394 B | Card copy (jailbreak boot hook). `emergency.sh.bak` 1,412 B (original backup on card) |
 | `dashboard.png` | 792,764 B | **Current live bistable display**: single-IDAT 8-bit grayscale 1072×1448. SHA-256 `cbf48177d8aa4b86016d4f03656d784646a25250fbed5d9dab01cd4f7952f4ce` |
@@ -68,6 +68,5 @@ Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/`
 | `*.BMP`/`*.PNM` derivatives >3 MB (11 files, 12.8 MB) | Lossy/oversized test detritus; the PNG sources suffice |
 | `FSCK*.REN`, `.Spotlight-V100/`, `.Trashes`, 0 B files | Card/system filesystem hygiene, no project value |
 | System `eips` + other ROM binaries | Unreachable (ROM partition read-only); behavior documented instead (doc 03) |
-| Go source (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`) | Belongs in `src/kindle-dash/` (repo-relative); **user copies it in when I10 work starts** (AGENTS.md path rule) |
 | Mac proxy scripts (v3 era) | Superseded architecture; doc 03 keeps the interface description |
 | Anything containing credentials/webhook UUIDs | Sanitized to placeholders (doc 04); **never commit the originals** |

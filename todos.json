@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T13:07Z",
+  "updated_at": "2026-09-24T13:21Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T16",
-    "state": "24.09: T15 DONE — fb_stub.go (!linux dev) final state: display(in) = ReadFile → pngDecode → toGray → writePGM (P5) to /tmp/dash-out.pgm (DASH_FB override kept). T15 cleanup: hand-written itoa → strconv.Itoa (dead DASH_FLIPX/Y branches were already dropped with the mmap path in T14). Bugfix found while verifying: P5 maxval was written as a raw 0xFF byte (no parser accepts that — PIL rejects it) → now ASCII '255' (17 B header + w×h raster). Verified: gofmt clean, go build/vet/test -count=1 green (darwin), linux/arm GOARM=7 cross-compile OK, DASH_FB smoke → 1,552,273 B PGM that PIL opens (1072,1448, mode L). UNVERIFIED on device (T17): eips exec rc, diag.log, user display check (visible / t180 orientation / flicker). On card (unchanged): refresh.sh v4 pre-T14 (2,720 B) + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent).",
-    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T16 (resolve newest go1.23.x patch — e.g. `go list -m -versions golang.org/toolchain` via proxy; GOTOOLCHAIN=go1.23.x CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=-s; verify static ARM via file + `go version <bin>`, no /Users in strings, size < ~7 MB vs T13 baseline 6,357,152 B; replace artifacts/binaries/dash + docs/05 SHA + todos.json in one commit). Then T17 (announce card write; cp new dash + updated refresh.sh → /Volumes/Kindle; hot re-stage on size change, no reboot needed; STOP and request user verification: visible? t180 orientation? flicker? + readbacks /mnt/us/diag.log (eips rc) and /mnt/us/refresh.log (dl ok / render rc)). Fallback if eips rc≠0 persists: dash write-PNG-only + refresh.sh calls /usr/sbin/eips itself (docs/03 fallback). After T17 success: update README current-state + docs (repo wins over Notion). After every state change: update this resume block + updated_at, commit together with the work."
+    "next_todo": "T17",
+    "state": "24.09: T16 DONE — final-architecture dash rebuilt with Go 1.23.12 (kernel 3.0.35 compatible): static, stripped, ELF 32-bit ARM EABI5, 5,177,496 B (was 6,291,616 B), SHA ce74c7b4…, committed to artifacts/binaries/dash (replaces the T11-sanitized I10-era build 1d5c8979…). On card (UNCHANGED): refresh.sh v4 pre-T14 (2,720 B) + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. NEXT = T17: announce + copy artifacts/binaries/dash and artifacts/refresh.sh to /Volumes/Kindle (dash size change 6,291,616 → 5,177,496 B triggers the v4 hot re-stage; no reboot needed), then STOP and request user verification (visible? t180 orientation? flicker?) + readbacks /mnt/us/diag.log (eips rc + duration) and /mnt/us/refresh.log (dl ok / render rc). T18/T19 remain blocked on the user's n8n API key (independent track).",
+    "how_to_resume": "1) Announce the write to the live card /Volumes/Kindle (point writes only: dash, refresh.sh — no bulk ops). 2) cp artifacts/binaries/dash artifacts/refresh.sh /Volumes/Kindle/ (card root = /mnt/us; the dash size change triggers the hot re-stage in refresh.sh v4). 3) Update todos.json (T17 in_progress + state) and commit. 4) STOP and ask the user: is the dashboard visible now? Orientation correct (t180 reference = transpose + 180° = 90° CW + horizontal flip)? Flicker acceptable? + have them read back /mnt/us/diag.log (eips rc + duration) and /mnt/us/refresh.log (dl ok, render rc=0). 5) If the display is OK → T17 done (user-verification note) + README current-state table + docs/05 card rows (dash, refresh.sh) in one commit; then revisit T18. If orientation is wrong → re-add the documented t180 (transpose + 180°) in src/kindle-dash, rebuild with the T16 recipe, redeploy. Fallback if eips rc ≠ 0 persists: dash render = write-PNG-only + refresh.sh calls /usr/sbin/eips -g itself (docs/03 fallback). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -172,11 +172,13 @@
     {
       "id": "T16",
       "title": "Static ARM build (Go ≤ 1.23) + size check",
-      "status": "open",
+      "status": "done",
       "issue": "I10-5",
       "depends_on": ["T12", "T13", "T14", "T15"],
-      "refs": ["AGENTS.md (hard technical rules, Go cap)", "artifacts/binaries/dash"],
-      "details": "CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags=\"-s\". Go 1.24+ FORBIDDEN (needs Linux ≥3.2; device 3.0.35). Compare size to 6.29 MB; on success replace artifacts/binaries/dash + update SHA in docs/05."
+      "refs": ["AGENTS.md (hard technical rules, Go cap)", "artifacts/binaries/dash", "docs/05-artifact-manifest.md"],
+      "details": "CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags=\"-s\". Go 1.24+ FORBIDDEN (needs Linux ≥3.2; device 3.0.35). Compare size to 6.29 MB; on success replace artifacts/binaries/dash + update SHA in docs/05. Executed 24.09: newest go1.23.x = go1.23.12 (resolved via the golang.org/toolchain version list); build = GOTOOLCHAIN=go1.23.12 CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=\"-s\" from src/kindle-dash/ (go.mod language 1.21). New binary 5,177,496 B (was 6,291,616 B). docs/05: repo-slot entry rewritten (new size/SHA + provenance, correcting the conflation of the repo slot with the on-card I10 build); stale 'Go source not in repo' row removed (source in src/kindle-dash/ since T11).",
+      "done_at": "2026-09-24",
+      "verification": "Built with the go1.23.12 toolchain; `go version <bin>` → go1.23.12; `file` → ELF 32-bit LSB executable, ARM, EABI5, statically linked; stripped; 5,177,496 B (under the ~7 MB budget; −1.1 MB vs the I10-era build); `strings` → zero /Users occurrences (-trimpath effective; supersedes the T11 same-size patch); SHA-256 ce74c7b44fe56c1700ced93d097ff09c993956fe1172da3f6f6ad75198f3f942; copied to artifacts/binaries/dash (sha-verified) replacing the previous slot build (1d5c8979…, 6,291,616 B). Pre-rebuild checks green: gofmt clean, go build/vet/test -count=1 (darwin), linux/arm GOARM=7 cross-compile OK. Device behavior UNVERIFIED → T17 (user display check + /mnt/us/diag.log)."
     },
     {
       "id": "T17",
