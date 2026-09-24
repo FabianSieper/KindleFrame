@@ -96,3 +96,40 @@ func TestSaveKindlePNGSample(t *testing.T) {
 	}
 	t.Log("sample at", path)
 }
+
+func TestScaleLetterbox(t *testing.T) {
+	// scale >= 1: input returned unchanged
+	src := image.NewGray(image.Rect(0, 0, 4, 4))
+	got, ok := scaleLetterbox(src, 1.0).(*image.Gray)
+	if !ok {
+		t.Fatalf("scale 1.0 → %T, want *image.Gray", scaleLetterbox(src, 1.0))
+	}
+	if got != src {
+		t.Fatal("scale 1.0 must return the input unchanged")
+	}
+	// scale 0.5 of a solid 8×8 gray-200 → 4×4 block centered on black
+	// (offset (8-4)/2 = 2 in both axes)
+	src = image.NewGray(image.Rect(0, 0, 8, 8))
+	for i := range src.Pix {
+		src.Pix[i] = 200
+	}
+	out, ok := scaleLetterbox(src, 0.5).(*image.Gray)
+	if !ok {
+		t.Fatalf("scale 0.5 → %T, want *image.Gray", scaleLetterbox(src, 0.5))
+	}
+	b := out.Bounds()
+	if b.Dx() != 8 || b.Dy() != 8 {
+		t.Fatalf("canvas %dx%d, want 8x8 (= input)", b.Dx(), b.Dy())
+	}
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			want := byte(0)
+			if x >= 2 && x < 6 && y >= 2 && y < 6 {
+				want = 200
+			}
+			if got := out.Pix[y*8+x]; got != want {
+				t.Fatalf("pixel %d,%d = %d, want %d", x, y, got, want)
+			}
+		}
+	}
+}

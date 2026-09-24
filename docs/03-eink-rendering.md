@@ -109,6 +109,7 @@ EOF
 ```
 n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
                                ├─ Go image/png decode (multi-IDAT/RGB ok as INPUT)
+                               ├─ (T20, DASH_SCALE<1) manual-bilinear downscale + black letterbox
                                ├─ Floyd-Steinberg grayscale
                                ├─ saveKindlePNG: filter 0 + 1 zlib stream → 1 IDAT, color type 0
                                └─ /mnt/us/dashboard.png (1072×1448)
@@ -116,7 +117,7 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 ```
 
 - **Why:** `dash` mmap (v4) is invisible; the Mac proxy (v3 era) keeps the Mac in the loop permanently; `eips` is the only visible path; grayscale + single-IDAT must therefore happen **on the device**.
-- **Status:** ✅ implemented in `src/kindle-dash/` (T12–T16: `saveKindlePNG`, `get`, `render` = `eips -g` exec, stub cleanup, Go 1.23.12 static build 5,177,496 B) + **deployed to the card 24.09 13:29Z (T17)** — user 24.09: visible ✅, orientation ✅, size ❌ (edge-to-edge, "too big") → **T20**; flicker not reported; T17 stays in progress until final acceptance (size + flicker).
+- **Status:** ✅ implemented in `src/kindle-dash/` (T12–T16: `saveKindlePNG`, `get`, `render` = `eips -g` exec, stub cleanup, Go 1.23.12 static build 5,177,496 B) + **deployed to the card 24.09 13:29Z (T17)** — user 24.09: visible ✅, orientation ✅, size ❌ (edge-to-edge, "too big") → **T20**; flicker not reported; T17 stays in progress until final acceptance (size + flicker). **T20 in progress (repo, 24.09 17:42Z):** code + tests + rebuild done (T20 build: same 5,177,496 B, SHA `58f751e4…`); deploy (point-write `dash` + `refresh.sh`) + user verification round 2 pending.
 - **Side decisions:** n8n stays RGB (converted device-side); partial refresh via `-x/-y` for less flicker; download 300 s / render 30 s (as in v4).
 
 ### Implementation plan (file level, from the 24.09 session)
@@ -126,7 +127,7 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 3. `fb_linux.go`: `display()` → `exec /usr/sbin/eips -g <file> -x 0 -y 0` (drop the mmap path). ✅ T14 — rc + duration always logged to `/mnt/us/diag.log` (new); the byte-buffer `transpose` and `DASH_FLIPX/Y` go away with the mmap path.
 4. `fb_stub.go`: PGM output (for development on the Mac). ✅ T14 (`DASH_FB` override; minor cleanup = T15).
 5. `render.go`: `render()` = thin `display()` wrapper (T14); the grayscale cascade (`toGray`) is unchanged.
-6. Build: `CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s"` (Go ≤ 1.23) → static binary, watch size (current 6.29 MB). ✅ T16 (Go 1.23.12, 5,177,496 B, `artifacts/binaries/dash`)
+6. Build: `CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s"` (Go ≤ 1.23) → static binary, watch size (current 5.18 MB). ✅ T16 (Go 1.23.12, 5,177,496 B, `artifacts/binaries/dash`). **T20 rebuild (24.09 17:42Z):** same toolchain; **same size** (5,177,496 B — the size-based hot re-stage will therefore NOT detect a same-size live swap; boot re-stage after reboot is the effective path, NOTE added to `refresh.sh`); SHA-256 `58f751e4f158fb9e97552aa186cdabb6926e3033418c2f1546a3499f03641644`. **Toolchain forensics:** the official hash-verified go1.23.12 tarball (SHA-256 `5bfa117e401ae64e7ffb960243c448b535fe007e682a13ff6c7371f4a6f0ccaa` per go.dev; tree == GitHub tag) ships a **pre-1.12-era `image/draw`** (no scaling ops, 5-arg `Draw`, no `Clear`) while having modern stdlib markers (`errors.Join`, generic `min`/`max`) → `scaleLetterbox` is a manual clamped bilinear (`bilinearGray`), no `image/draw` import; code against the verified tree's actual API, not remembered Go; build with `GOTOOLCHAIN=local` + `env -u GOROOT` (an ambient Homebrew `GOROOT` would shadow the pinned toolchain).
 7. Deploy (hot re-stage, no reboot needed): copy new `dash` → `/mnt/us/dash`, `pkill -f /mnt/us/dash && nohup /tmp/dash ...`, watch `/mnt/us/diag.log`. ✅ T17 (executed 24.09 13:29Z, point-write; SHAs verified: `dash` = `ce74c7b4…`, `refresh.sh` = `d8d84e99…`, repo == card; effective trigger = user reboot ~14:19Z)
 
 ### Open risks (assess before coding)
@@ -137,7 +138,7 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 
 ## Open (display-side)
 
-- `[open]` **T20 (new 24.09, from user verification round 1):** image size on display — "füllt den ganzen screen aus, ist aber zu groß" (edge-to-edge, no margin). Fix: `DASH_SCALE` env var (float 0..1, default 1.0) read in `get()`; if < 1 → `draw.ApproxBiLinear` downscale to s·w × s·h → center on black `image.NewGray` 1072×1448 letterbox → existing `*image.Gray` fast path in `toGray` → `saveKindlePNG` (output spec unchanged: 1072×1448, 1 IDAT, ct 0, filter 0). Start at 0.8; retune = edit `refresh.sh` (`export DASH_SCALE=0.8`) + redeploy only. Rebuild (Go ≤ 1.23) + redeploy both + user reboot. Clarify with user: (a) wants a margin/letterbox (→ this) vs (b) wants the n8n canvas zoomed out (→ I8, n8n side).
+- `[in progress T20]` **T20 (new 24.09, from user verification round 1):** image size on display — "füllt den ganzen screen aus, ist aber zu groß" (edge-to-edge, no margin). Fix: `DASH_SCALE` env var (float 0..1, default 1.0) read in `get()`; if < 1 → **manual clamped bilinear downscale** (`bilinearGray` — the hash-verified go1.23.12 tree ships a pre-1.12-era `image/draw` with no scaling ops, so `draw.ApproxBiLinear` is unavailable) to s·w × s·h → center on a black `image.NewGray` letterbox of the input's **original** dims → existing `*image.Gray` fast path in `toGray` → `saveKindlePNG` (output spec unchanged: 1072×1448, 1 IDAT, ct 0, filter 0). Start at 0.8; later retune = edit `refresh.sh` (`export DASH_SCALE=0.8`) + redeploy only. **AS BUILT 24.09 17:42Z:** code + tests done in `src/kindle-dash/` (all 6 tests pass, vet clean, verified toolchain); T20 rebuild 5,177,496 B / SHA `58f751e4…` in `artifacts/binaries/dash` (**same size as T16** → size-based hot re-stage blind; reboot is the effective deploy trigger); `refresh.sh` 2,900 B / `b7e31438…` with `export DASH_SCALE=0.8` + restage NOTE. **REMAINING:** announced point-write deploy (both files) + user reboot + verification round 2 (first scaled image appears at the FIRST re-download, not at boot render). Clarify with user: (a) wants a margin/letterbox (→ this) vs (b) wants the n8n canvas zoomed out (→ I8, n8n side).
 - `[open]` Partial vs. full refresh flicker trade-off in the regime (30 s) — user feedback after I10.
 - `[open]` 16/4-bit grayscale mapping of the E-Ink driver for 8-bit input (currently: the driver does it, looked ok in the v2/v3 era).
 - `[open]` Whether `eips` partial regions via `-x/-y` map a 1072×1448 PNG exactly onto the 758×1024 geometry (grid reference images as check).

@@ -10,6 +10,8 @@ OUT=/tmp/dashboard.png
 CACHE=/mnt/us/dashboard.png
 PIDFILE=/tmp/refresh.pid
 LOG=/mnt/us/refresh.log
+# T20: downscale + black letterbox (0..1; 1.0 = full size, no margin)
+export DASH_SCALE=0.8
 
 if [ -f "$PIDFILE" ]; then
   OLD=$(cat "$PIDFILE" 2>/dev/null)
@@ -28,7 +30,10 @@ log() {
 # --- stage binary: /mnt/us (FAT) -> /tmp (tmpfs, always exec) ---
 DASH_SRC=/mnt/us/dash
 DASH=/tmp/dash
-# re-stage if the source binary's size changed (hot-apply future updates)
+# re-stage if the source binary's size changed (hot-apply future updates).
+# NOTE: a same-SIZE replacement is not detected (T20 build == T16 size). At
+# boot /tmp is empty, so the staged copy always equals /mnt/us/dash after a
+# reboot — and every deploy includes a reboot anyway.
 restage() {
   CS=$(wc -c < "$DASH_SRC" 2>/dev/null | tr -d ' ')
   CL=$(wc -c < "$DASH" 2>/dev/null | tr -d ' ')

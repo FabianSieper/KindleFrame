@@ -92,3 +92,79 @@ func TestGet(t *testing.T) {
 		}
 	}
 }
+
+func TestDashScale(t *testing.T) {
+	cases := []struct {
+		env  string
+		want float64
+	}{
+		{"", 1.0},      // unset → default
+		{"abc", 1.0},   // invalid → default
+		{"-1", 0.0},    // clamped low
+		{"1.5", 1.0},   // clamped high
+		{"0", 0.0},
+		{"1", 1.0},
+		{"0.5", 0.5},
+	}
+	for _, c := range cases {
+		t.Setenv("DASH_SCALE", c.env)
+		if got := dashScale(); got != c.want {
+			t.Errorf("DASH_SCALE=%q → %v, want %v", c.env, got, c.want)
+		}
+	}
+}
+
+// TestGetScaled: DASH_SCALE=0.5 → the solid-color source is downscaled
+// exactly and centered on a black canvas of the ORIGINAL dimensions
+// (output spec unchanged: 1072×1448, 1 IDAT, colortype 0, filter 0).
+func TestGetScaled(t *testing.T) {
+	const w, h = 1072, 1448
+	const srcVal = 200
+	src := image.NewGray(image.Rect(0, 0, w, h))
+	for i := range src.Pix {
+		src.Pix[i] = srcVal
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, src); err != nil {
+		t.Fatalf("encode source: %v", err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		_, _ = w.Write(buf.Bytes())
+	}))
+	defer srv.Close()
+
+	t.Setenv("DASH_SCALE", "0.5")
+	out := filepath.Join(t.TempDir(), "dashboard.png")
+	if err := get(out, []string{srv.URL}); err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	g, info := readKindle(t, out)
+	if info.idat != 1 || info.ct != 0 || info.bd != 8 {
+		t.Fatalf("idat=%d ct=%d bd=%d, want 1/0/8 (eips)", info.idat, info.ct, info.bd)
+	}
+	if info.w != w || info.h != h {
+		t.Fatalf("dims %dx%d, want %dx%d (letterbox canvas = input)", info.w, info.h, w, h)
+	}
+	sw, sh := w/2, h/2
+	ox, oy := (w-sw)/2, (h-sh)/2 // 268, 362
+	if got := g.Pix[0]; got != 0 {
+		t.Fatalf("corner pixel = %d, want 0", got)
+	}
+	if got := g.Pix[(h-1)*g.Stride+(w-1)]; got != 0 {
+		t.Fatalf("corner pixel = %d, want 0", got)
+	}
+	if got := g.Pix[oy*g.Stride+ox]; got != srcVal {
+		t.Fatalf("block corner (%d,%d) = %d, want %d", ox, oy, got, srcVal)
+	}
+	if got := g.Pix[(oy+sh-1)*g.Stride+(ox+sw-1)]; got != srcVal {
+		t.Fatalf("block corner (%d,%d) = %d, want %d", ox+sw-1, oy+sh-1, got, srcVal)
+	}
+	// just outside the scaled block = black
+	if got := g.Pix[oy*g.Stride+(ox-1)]; got != 0 {
+		t.Fatalf("pixel outside block = %d, want 0", got)
+	}
+	if got := g.Pix[(oy+sh)*g.Stride+ox]; got != 0 {
+		t.Fatalf("pixel outside block = %d, want 0", got)
+	}
+}

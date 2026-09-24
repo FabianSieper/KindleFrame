@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -64,6 +65,25 @@ type httpError struct{ code int }
 
 func (e *httpError) Error() string { return fmt.Sprintf("http %d", e.code) }
 
+// dashScale reads DASH_SCALE (float 0..1, default 1.0 = full size).
+// Invalid or empty value → 1.0; out-of-range values are clamped to [0, 1].
+// < 1 → scaleLetterbox (downscale + black letterbox, T20).
+func dashScale() float64 {
+	s := 1.0
+	if v := os.Getenv("DASH_SCALE"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			s = f
+		}
+	}
+	if s < 0 {
+		s = 0
+	}
+	if s > 1 {
+		s = 1
+	}
+	return s
+}
+
 func get(out string, urls []string) error {
 	client := &http.Client{Timeout: 45 * time.Second}
 	var lastErr error
@@ -92,6 +112,7 @@ func get(out string, urls []string) error {
 			lastErr = fmt.Errorf("%s: decode: %w", u, err)
 			continue
 		}
+		img = scaleLetterbox(img, dashScale())
 		b := img.Bounds()
 		w, h := b.Dx(), b.Dy()
 		gray := toGray(img)

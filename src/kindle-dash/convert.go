@@ -101,6 +101,82 @@ func toGray(img image.Image) []byte {
 	return out
 }
 
+// scaleLetterbox shrinks img by scale (0 < scale < 1) and centers the
+// result on a black canvas of the input's original dimensions
+// (1072×1448 or 1448×1072) — the T20 margin fix: the output frame size is
+// unchanged, the content gets a black border. scale >= 1 returns img
+// unchanged. The downscale is a manual bilinear over the luma
+// (the pinned toolchain's image/draw has no scaling ops — no
+// ApproxBiLinear — so the filter is implemented by hand); the result is
+// an *image.Gray, so toGray() takes its fast path (already-quantized
+// pixels round-trip exactly).
+func scaleLetterbox(img image.Image, scale float64) image.Image {
+	b := img.Bounds()
+	w, h := b.Dx(), b.Dy()
+	if scale >= 1 {
+		return img
+	}
+	sw, sh := int(float64(w)*scale), int(float64(h)*scale)
+	if sw < 1 {
+		sw = 1
+	}
+	if sh < 1 {
+		sh = 1
+	}
+	gray := toGray(img) // w*h bytes, ITU-R BT.601 + Floyd-Steinberg
+	small := image.NewGray(image.Rect(0, 0, sw, sh))
+	bilinearGray(gray, w, h, small, sw, sh)
+	canvas := image.NewGray(image.Rect(0, 0, w, h))
+	ox, oy := (w-sw)/2, (h-sh)/2
+	for y := 0; y < sh; y++ {
+		copy(canvas.Pix[(oy+y)*w+ox:(oy+y)*w+ox+sw], small.Pix[y*sw:(y+1)*sw])
+	}
+	return canvas
+}
+
+// bilinearGray downscales the w×h 8-bit luma row buffer src (as produced
+// by toGray) to sw×sh with a clamped bilinear filter into the Pix of dst
+// (sw <= w, sh <= h; 1:1 copies through unchanged).
+func bilinearGray(src []byte, w, h int, dst *image.Gray, sw, sh int) {
+	for y := 0; y < sh; y++ {
+		fy := (float64(y)+0.5)*float64(h)/float64(sh) - 0.5
+		y0 := int(fy)
+		if y0 < 0 {
+			y0 = 0
+			fy = 0
+		}
+		fy -= float64(y0)
+		y1 := y0 + 1
+		if y1 > h-1 {
+			y1 = h - 1
+		}
+		row0 := src[y0*w : (y0+1)*w]
+		row1 := src[y1*w : (y1+1)*w]
+		drow := dst.Pix[y*sw : (y+1)*sw]
+		for x := 0; x < sw; x++ {
+			fx := (float64(x)+0.5)*float64(w)/float64(sw) - 0.5
+			x0 := int(fx)
+			if x0 < 0 {
+				x0 = 0
+				fx = 0
+			}
+			fx -= float64(x0)
+			x1 := x0 + 1
+			if x1 > w-1 {
+				x1 = w - 1
+			}
+			v := (1-fx)*(1-fy)*float64(row0[x0]) + fx*(1-fy)*float64(row0[x1]) +
+				(1-fx)*fy*float64(row1[x0]) + fx*fy*float64(row1[x1])
+			if v < 0 {
+				v = 0
+			} else if v > 255 {
+				v = 255
+			}
+			drow[x] = byte(v + 0.5)
+		}
+	}
+}
+
 // unprem converts a 16-bit premultiplied channel (and its alpha) to 0..255.
 func unprem(r16, a16 uint32) float64 {
 	if a16 == 0 {

@@ -66,13 +66,14 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - Between the first inventory and the repo build, several files were removed from the card: `eips`/`eips-new`/`eips-symlink` (local copies), `kindle-dash.zip`, `mrpi.log`/`reboot.log`/`eips-test.log`, test `.txt` files, `watchthis/`/`kindle-fertig/`/`kual-mrpi/` directories, `watchthis-jailbreak-r03.zip`, `Update_hotfix_watchthis_custom.bin`.
 - **All** of them exist as local copies and are secured in this repo (`artifacts/jailbreak/`). The **system `eips`** lives on the internal ROM partition (inaccessible) and does **not** go into the repo. `[verified]`
 
-## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — display + orientation verified, size open; T20 open) ← CURRENT TICKET
+## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — display + orientation verified, size open; T20 in progress — code + build done, deploy pending) ← CURRENT TICKET
 
 `dash` remains the only binary; `eips` remains the only visible path; the Mac drops out completely:
 
 ```
 n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
                                ├─ Go image/png decode (multi-IDAT/RGB ok as INPUT)
+                               ├─ (T20, DASH_SCALE<1) manual-bilinear downscale + black letterbox
                                ├─ Floyd-Steinberg grayscale
                                ├─ saveKindlePNG: filter 0 + 1 zlib stream → 1 IDAT, color type 0
                                └─ /mnt/us/dashboard.png (1072×1448)
@@ -91,13 +92,14 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 
 File-level details + open risks: `docs/03-eink-rendering.md` §Implementation plan.
 
-### Status 24.09 (T16 build deployed 13:29Z — user verification round 1)
+### Status 24.09 (T16 build deployed 13:29Z — user verification round 1 → T20 in progress: code + rebuild done 17:42Z, deploy pending)
 
 - **Deploy** (13:29Z, point-write, announced + user-authorized): `/mnt/us/dash` = repo `artifacts/binaries/dash` (SHA `ce74c7b4…`), `/mnt/us/refresh.sh` = repo `artifacts/refresh.sh` (SHA `d8d84e99…`); repo == card re-verified after the write.
 - **Effective trigger:** user reboot ~14:19Z. `refresh.log`: staged new dash, v4 start pid=6026, boot render rc=0 (14:19:50Z). `diag.log`: eips rc=0, durations 3.244 s / 2.636 s / 395.8 ms @14:20:14Z → **exec-permission risk resolved** (pre-T14 risk).
 - **Card log gap** after 14:19:50Z (`refresh.log`) / 14:20:14Z (`diag.log`); first download ~300 s later unobserved — device likely sleeping, no error indication [open].
 - **User verification round 1 (24.09):** dashboard **visible** ✅, **orientation** ✅ (t180 reference), **size ❌** ("füllt den ganzen screen aus, ist aber zu groß" = edge-to-edge, no margin) → **T20** (DASH_SCALE letterbox). Flicker: not reported.
 - **Card-file measurement (14:57Z, PNG chunk walk):** card `dashboard.png` (SHA `cbf48177…`, 792,764 B) = 1072×1448, 8-bit, **colortype 2 (RGB), 25 IDAT** → the "single-IDAT grayscale, currently visible" wording in this repo was a **doc error** (corrected here + in `docs/03`, `docs/05`, `AGENTS.md`). The 1-IDAT + colortype 0 rule stays the **verified-safe output spec / reliability heuristic** (all ✅ rows + failing 6/19-IDAT rows in the `docs/03` proof table); it is NOT a verified complete description of eips's parser. The frame the user actually sees is the v2/v3-era eips-rendered grayscale, bistably retained.
+- **T20 in progress (repo, 17:42Z):** code + tests done in `src/kindle-dash/` (`DASH_SCALE` env read in `get()`; < 1 → **manual clamped bilinear downscale** — the hash-verified go1.23.12 tree ships a pre-1.12-era `image/draw` without scaling ops — + black letterbox of the input's original dims; all 6 tests pass, vet clean); T20 rebuild 5,177,496 B / SHA `58f751e4…` in `artifacts/binaries/dash` (**same size as T16** → size-based hot re-stage blind; boot re-stage after reboot is the effective path, NOTE added to `refresh.sh`); `refresh.sh` 2,900 B / `b7e31438…` (`export DASH_SCALE=0.8`). **REMAINING:** announced point-write deploy (both files) + user reboot + verification round 2.
 
 ### Deliberately DOCUMENTED ONLY, NOT IN THE REPO
 
