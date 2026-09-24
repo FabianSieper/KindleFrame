@@ -1,0 +1,154 @@
+#!/bin/sh
+# refresh.sh v2 — Kindle Voyage live dashboard with keep-alive
+# 10s tick | partial re-render every 30s | full download+render every 300s
+
+URLS='http://192.168.178.132:9999/dashboard'
+OUT=/tmp/dashboard.png
+TMP=/tmp/dashboard.png.tmp
+FALLBACK=/mnt/us/dashboard.png
+PIDFILE=/tmp/refresh.pid
+LOG=/mnt/us/refresh.log
+LAST_SUM=/tmp/last_cksum
+
+if [ -f "$PIDFILE" ]; then
+  OLD=$(cat "$PIDFILE" 2>/dev/null)
+  if [ -n "$OLD" ] && kill -0 "$OLD" 2>/dev/null; then
+    kill "$OLD" 2>/dev/null
+    sleep 1
+  fi
+fi
+echo $$ > "$PIDFILE"
+trap 'rm -f "$PIDFILE"' EXIT
+
+log() {
+  echo "$(date) $*" >> "$LOG" 2>/dev/null
+}
+
+png_sig_ok() {
+  [ "$(od -An -tx1 -N8 "$1" 2>/dev/null | tr -d ' \n')" = "89504e470d0a1a0a" ]
+}
+
+png_dims_ok() {
+  WH=$(od -An -tx1 -j16 -N8 "$1" 2>/dev/null | tr -d ' \n')
+  [ "$WH" = "00000430000005a8" ] || [ "$WH" = "000005a800000430" ]
+}
+
+png_color_ok() {
+  [ "$(od -An -tx1 -j25 -N1 "$1" 2>/dev/null | tr -d ' \n')" = "00" ]
+}
+
+png_idat_count() {
+  _f="$1"
+  _size=$(wc -c < "$_f" 2>/dev/null | tr -d ' ')
+  _pos=8
+  _count=0
+  while [ "$_pos" -le $((_size - 8)) ]; do
+    _hdr=$(od -An -tx1 -j"$_pos" -N8 "$_f" 2>/dev/null | tr -d ' \n')
+    [ ${#_hdr} -lt 16 ] && break
+    _len=$((0x$(echo "$_hdr" | cut -c1-8)))
+    _ty=$(echo "$_hdr" | cut -c9-16)
+    if [ "$_ty" = "49444154" ]; then
+      _count=$((_count + 1))
+    fi
+    if [ "$_ty" = "49454e44" ]; then
+      break
+    fi
+    _pos=$((_pos + 12 + _len))
+  done
+  echo "$_count"
+}
+
+png_valid() {
+  png_sig_ok "$1" && png_dims_ok "$1" && png_color_ok "$1" && [ "$(png_idat_count "$1")" -eq 1 ]
+}
+
+cksum_of() {
+  cksum "$1" 2>/dev/null | awk '{print $1}'
+}
+
+download() {
+  rm -f "$TMP"
+  wget -q -T 45 -O "$TMP" "$1"
+  RC=$?
+  if [ "$RC" -eq 0 ] && [ -s "$TMP" ] && png_valid "$TMP"; then
+    mv -f "$TMP" "$OUT"
+    return 0
+  fi
+  rm -f "$TMP"
+  return 1
+}
+
+render() {
+  if [ "$1" = "full" ]; then
+    /usr/sbin/eips -g "$OUT" -f -x 0 -y 0 >> "$LOG" 2>&1
+  else
+    /usr/sbin/eips -g "$OUT" -x 0 -y 0 >> "$LOG" 2>&1
+  fi
+}
+
+do_download() {
+  OK=0
+  for URL in $URLS; do
+    log "dl $URL"
+    if download "$URL"; then
+      OK=1
+      if png_valid "$OUT"; then
+        NS=$(cksum_of "$OUT")
+        OS=$(cat "$LAST_SUM" 2>/dev/null)
+        if [ "$NS" != "$OS" ]; then
+          echo "$NS" > "$LAST_SUM"
+          log "new image ($OS -> $NS) full render"
+          render full
+          log "render rc=$?"
+        else
+          log "unchanged ($NS)"
+        fi
+      else
+        log "bad dims, keeping previous"
+      fi
+      break
+    fi
+  done
+  if [ "$OK" -ne 1 ]; then
+    log "dl failed"
+  fi
+}
+
+# --- Boot: restore fallback if no cached download ---
+if [ ! -s "$OUT" ]; then
+  if [ -s "$FALLBACK" ]; then
+    cp "$FALLBACK" "$OUT"
+    log "boot: restored fallback"
+  fi
+fi
+
+if [ -s "$OUT" ] && png_valid "$OUT"; then
+  log "boot render"
+  render full
+elif [ -s "$OUT" ] && png_sig_ok "$OUT"; then
+  log "boot: OUT invalid, restoring fallback"
+  cp "$FALLBACK" "$OUT" 2>/dev/null
+  if png_valid "$OUT"; then
+    log "boot render (fallback)"
+    render full
+  fi
+fi
+
+lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null
+log "v2 start pid=$$"
+
+tick=0
+while true; do
+  lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null
+  tick=$((tick + 1))
+
+  if [ $((tick % 3)) -eq 0 ] && [ -s "$OUT" ]; then
+    render partial
+  fi
+
+  if [ $((tick % 30)) -eq 0 ]; then
+    do_download
+  fi
+
+  sleep 10
+done

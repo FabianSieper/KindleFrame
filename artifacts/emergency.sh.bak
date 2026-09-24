@@ -1,0 +1,48 @@
+#!/bin/sh
+LOG="/mnt/us/diag.log"
+: > "$LOG"
+
+echo "=== DIAG START $(date) ===" >> "$LOG"
+
+# Kill any existing refresh.sh before starting fresh
+pkill -f refresh.sh 2>/dev/null
+sleep 1
+
+# 1. eips availability
+echo "--- eips ---" >> "$LOG"
+which eips >> "$LOG" 2>&1
+echo "which eips exit: $?" >> "$LOG"
+
+# 2. Test eips with text
+eips "Diag: eips works" >> "$LOG" 2>&1
+echo "eips text exit: $?" >> "$LOG"
+
+# 3. Test eips with 800x1264 grayscale (proper screen size)
+echo "--- eips grayscale 800x1264 ---" >> "$LOG"
+cp /mnt/us/eips-test.png /tmp/eips-test.png 2>/dev/null
+eips /tmp/eips-test.png >> "$LOG" 2>&1
+echo "eips gray exit: $?" >> "$LOG"
+
+# 4. Test eips with 1-bit image
+echo "--- eips 1bit 800x1264 ---" >> "$LOG"
+cp /mnt/us/eips-test-1bit.png /tmp/eips-test-1bit.png 2>/dev/null
+eips /tmp/eips-test-1bit.png >> "$LOG" 2>&1
+echo "eips 1bit exit: $?" >> "$LOG"
+
+# 5. Test the actual dashboard (RGB - expected to fail)
+echo "--- eips dashboard (RGB) ---" >> "$LOG"
+eips /mnt/us/dashboard.png >> "$LOG" 2>&1
+echo "eips dashboard exit: $?" >> "$LOG"
+
+# 6. Display result
+eips "Diag done. Starting refresh..." >> "$LOG" 2>&1
+
+# 6. Start refresh.sh
+echo "=== STARTING refresh.sh ===" >> "$LOG"
+if [ -f /mnt/us/refresh.sh ]; then
+  chmod +x /mnt/us/refresh.sh 2>/dev/null
+  nohup /mnt/us/refresh.sh > /dev/null 2>&1 &
+  echo "refresh.sh started (PID: $!)" >> "$LOG"
+else
+  echo "refresh.sh NOT FOUND" >> "$LOG"
+fi

@@ -1,0 +1,311 @@
+=== EIPS FB-INFO + DUMP MATRIX START Tue Sep 22 15:48:33 UTC 2026 ===
+--- eips strings (usage block) ---
+usage:
+to print strings: eips [row] [col] [-h] string
+		 -h for highlighted text
+to show image: eips -g|-b image_path [-w waveform -f -x xpos -y ypos -v]
+		 -g for png, -b for bitmap
+		 -w waveform can be gc16, gl16, reagl, reagld, gck16, glkw16 or du, default is gc16,
+		 -f for full update, default is partial update
+		 -x -y in units of pixels
+		 -v for inverted picture
+		 -k filename, save workingbuffer to file
+to paint a retangle on screen: eips -d l=a,w=b,h=c [-x xx -y yy -w wf]
+		 a is gray level in hex, b is width, c is height, with optional xx yy location, waveform mode
+to clear display: eips -c 
+to paint checker: eips -q 
+to paint grayscale: eips -l 
+to paint pattern: eips -p 
+to paint barcode: eips -r barcode
+to overlay a grid: eips -a 5 (grid size)
+to print fb info: eips -i
+to flash display with current fb content: eips -s w=758,h=1024 -f
+--- fb0 geometry ---
+/sys/class/graphics/fb0/virtual_size: 1088,6144
+/sys/class/graphics/fb0/bits_per_pixel: 8
+/sys/class/graphics/fb0/name: mxc_epdc_fb
+/sys/class/graphics/fb0/mode: 
+0 mxc_epdc_fb
+crw-rw----    1 root     video      29,   0 Sep 22 15:47 /dev/fb0
+--- SEQUENCE: each state stays visible ~18s ---
+--- eips -i framebuffer info ---
+rc=0
+
+Fixed framebuffer info
+    id:              mxc_epdc_fb    smem_start:       0x81000000
+    smem_len:            6782976    type:          PACKED_PIXELS
+    type_aux:                  0    visual:   STATIC_PSEUDOCOLOR
+    xpanstep:                  1    ypanstep:                  1
+    ywrapstep:                 0    line_length:            1088
+    mmio_start:       0x00000000    mmio_len:                  0
+    accel:                     0
+
+Variable framebuffer info
+    xres:                   1072    yres:                   1448
+    xres_virtual:           1088    yres_virtual:           6144
+    xoffset:                   0    yoffset:                   0
+    bits_per_pixel:            8    grayscale:                 1
+    red.offset:                0    green.offset:              0
+    red.length:                8    green.length:              8
+    red.msb_right:             0    green.msb_right:           0
+    blue.offset:               0    transp.offset:             0
+    blue.length:               8    transp.length:             0
+    blue.msb_right:            0    transp.msb_right:          0
+    nonstd:                    0    activate:                128
+    width:                    91    height:                  122
+    accel_flags:               0    pixclock:           83333333
+    left_margin:              16    right_margin:            104
+    upper_margin:              4    lower_margin:              4
+    hsync_len:                26    vsync_len:                 2
+    sync:                      0    vmode:                     0
+    rotate:                    3
+DPI: 299.217582 301.468852 300
+waveform type = 2
+material type = 1
+temperature = 26 (C)
+--- eips -c clear ---
+rc=0
+update_to_display: update_mode=PARTIAL, wave_mode=2 inverted=0
+--- eips -k dump fb-after-clear ---
+rc=0
+write 3104512 byte @0x40db0000 to /mnt/us/fb-after-clear.bin
+-rwxrwxrwx    1 root     root       3104512 Sep 22 15:48 /mnt/us/fb-after-clear.bin
+--- eips -q -f checker ---
+rc=0
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+--- eips -k dump fb-after-checker ---
+rc=0
+write 3104512 byte @0x40bfe000 to /mnt/us/fb-after-checker.bin
+-rwxrwxrwx    1 root     root       3104512 Sep 22 15:49 /mnt/us/fb-after-checker.bin
+--- eips -l -f grayscale ---
+rc=0
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+--- eips -k dump fb-after-gray ---
+rc=0
+write 3104512 byte @0x40cc8000 to /mnt/us/fb-after-gray.bin
+-rwxrwxrwx    1 root     root       3104512 Sep 22 15:49 /mnt/us/fb-after-gray.bin
+--- eips -p -f pattern ---
+rc=0
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+--- eips -k dump fb-after-pattern ---
+rc=0
+write 3104512 byte @0x40bbb000 to /mnt/us/fb-after-pattern.bin
+-rwxrwxrwx    1 root     root       3104512 Sep 22 15:50 /mnt/us/fb-after-pattern.bin
+=== EIPS DIAG PHASE2 START Tue Sep 22 16:16:43 UTC 2026 ===
+--- eips -d l=00,w=100,h=100 -f -x 0 -y 0 ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+HOLD MARKER 20s - USER: note which CORNER the black square is in!
+--- dump fb-after-marker.bin ---
+write 3104512 byte @0x40b8c000 to /mnt/us/fb-after-marker.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 16:17 /mnt/us/fb-after-marker.bin
+sync
+dump fb-after-marker.bin done
+DONE B
+--- eips -d l=ff,w=1072,h=1448 -f -x 0 -y 0 ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+HOLD FULLWHITE 10s
+--- dump fb-after-fullwhite.bin ---
+write 3104512 byte @0x40bec000 to /mnt/us/fb-after-fullwhite.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 16:17 /mnt/us/fb-after-fullwhite.bin
+sync
+dump fb-after-fullwhite.bin done
+DONE C
+--- eips -d l=80,w=1072,h=1448 -f -x 0 -y 0 ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+HOLD FULLGRAY 10s
+--- dump fb-after-fullgray.bin ---
+write 3104512 byte @0x40c71000 to /mnt/us/fb-after-fullgray.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 16:17 /mnt/us/fb-after-fullgray.bin
+sync
+dump fb-after-fullgray.bin done
+DONE D
+--- eips -q -f ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+HOLD FINAL CHECKER 10s
+--- dump fb-after-final.bin ---
+write 3104512 byte @0x40c9a000 to /mnt/us/fb-after-final.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 16:17 /mnt/us/fb-after-final.bin
+sync
+dump fb-after-final.bin done
+DONE E
+=== EIPS DIAG PHASE2 END Tue Sep 22 16:17:43 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Tue Sep 22 18:11:45 UTC 2026 ===
+=== EIPS DIAG PHASE2 END Tue Sep 22 18:11:47 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Tue Sep 22 18:20:13 UTC 2026 ===
+=== EIPS DIAG PHASE2 END Tue Sep 22 18:20:15 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Tue Sep 22 18:27:18 UTC 2026 ===
+=== EIPS DIAG PHASE2 END Tue Sep 22 18:27:20 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Tue Sep 22 19:26:50 UTC 2026 ===
+--- orient show t ---
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+rc=0
+--- orient show t180 ---
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+rc=0
+--- orient show cw ---
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+rc=0
+=== EIPS DIAG PHASE2 START Tue Sep 22 19:37:21 UTC 2026 ===
+--- orient show t ---
+eips: paint_image> cannot open "-f":can't fopen
+update_to_display: update_mode=PARTIAL, wave_mode=2 inverted=0
+rc_g=1
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+rc_bare=0
+--- orient show t180 ---
+eips: paint_image> cannot open "-f":can't fopen
+update_to_display: update_mode=PARTIAL, wave_mode=2 inverted=0
+rc_g=1
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+rc_bare=0
+=== EIPS DIAG PHASE2 START Tue Sep 22 20:03:58 UTC 2026 ===
+--- clear ---
+update_to_display: update_mode=PARTIAL, wave_mode=2 inverted=0
+rc=0
+rc_clear=0
+--- orient show t ---
+--- show t -b 1bit ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump t b1 ---
+write 3104512 byte @0x40b9e000 to /mnt/us/fbdump-t-b1.bin
+rc=0
+size_b1=3104512
+--- orient show t180 ---
+--- show t180 -b 1bit ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump t180 b1 ---
+write 3104512 byte @0x40d27000 to /mnt/us/fbdump-t180-b1.bin
+rc=0
+size_b1=3104512
+--- orient show cw ---
+--- show cw -b 1bit ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump cw b1 ---
+write 3104512 byte @0x40ba4000 to /mnt/us/fbdump-cw-b1.bin
+rc=0
+size_b1=3104512
+--- orient show ccw ---
+--- show ccw -b 1bit ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump ccw b1 ---
+write 3104512 byte @0x40b45000 to /mnt/us/fbdump-ccw-b1.bin
+rc=0
+size_b1=3104512
+--- checker ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+DONE F
+=== EIPS DIAG PHASE2 END Tue Sep 22 20:06:19 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Tue Sep 22 21:04:24 UTC 2026 ===
+--- F2 eips -i ---
+
+Fixed framebuffer info
+    id:              mxc_epdc_fb    smem_start:       0x81000000
+    smem_len:            6782976    type:          PACKED_PIXELS
+    type_aux:                  0    visual:   STATIC_PSEUDOCOLOR
+    xpanstep:                  1    ypanstep:                  1
+    ywrapstep:                 0    line_length:            1088
+    mmio_start:       0x00000000    mmio_len:                  0
+    accel:                     0
+
+Variable framebuffer info
+    xres:                   1072    yres:                   1448
+    xres_virtual:           1088    yres_virtual:           6144
+    xoffset:                   0    yoffset:                   0
+    bits_per_pixel:            8    grayscale:                 1
+    red.offset:                0    green.offset:              0
+    red.length:                8    green.length:              8
+    red.msb_right:             0    green.msb_right:           0
+    blue.offset:               0    transp.offset:             0
+    blue.length:               8    transp.length:             0
+    blue.msb_right:            0    transp.msb_right:          0
+    nonstd:                    0    activate:                128
+    width:                    91    height:                  122
+    accel_flags:               0    pixclock:           83333333
+    left_margin:              16    right_margin:            104
+    upper_margin:              4    lower_margin:              4
+    hsync_len:                26    vsync_len:                 2
+    sync:                      0    vmode:                     0
+    rotate:                    3
+DPI: 299.217582 301.468852 300
+waveform type = 2
+material type = 1
+temperature = 29 (C)
+rc=0
+--- F2 clear ---
+update_to_display: update_mode=PARTIAL, wave_mode=2 inverted=0
+rc=0
+--- dump F2-clear.bin ---
+write 3104512 byte @0x40abb000 to /mnt/us/F2-clear.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:04 /mnt/us/F2-clear.bin
+sync
+dump F2-clear.bin done
+--- F2 checker (step 3) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+HOLD CHECKER 20s = step 3
+--- dump F2-checker.bin ---
+write 3104512 byte @0x40bab000 to /mnt/us/F2-checker.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:05 /mnt/us/F2-checker.bin
+sync
+dump F2-checker.bin done
+--- F2 -b 1bit t180 (step 4) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump F2-b1-t180.bin ---
+write 3104512 byte @0x40c9d000 to /mnt/us/F2-b1-t180.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:05 /mnt/us/F2-b1-t180.bin
+sync
+dump F2-b1-t180.bin done
+size_b1=3104512
+--- F2 flash after b1 (step 5) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump F2-flash-after-b1.bin ---
+write 3104512 byte @0x40ba8000 to /mnt/us/F2-flash-after-b1.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:05 /mnt/us/F2-flash-after-b1.bin
+sync
+dump F2-flash-after-b1.bin done
+--- F2 -g 8bit t180 (step 6) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump F2-g8-t180.bin ---
+write 3104512 byte @0x40d48000 to /mnt/us/F2-g8-t180.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:06 /mnt/us/F2-g8-t180.bin
+sync
+dump F2-g8-t180.bin done
+--- F2 flash after g8 (step 7) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+--- dump F2-flash-after-g8.bin ---
+write 3104512 byte @0x40c2d000 to /mnt/us/F2-flash-after-g8.bin
+rc=0
+-rwxrwxrwx    1 root     root       3104512 Sep 22 21:06 /mnt/us/F2-flash-after-g8.bin
+sync
+dump F2-flash-after-g8.bin done
+--- F2 final checker (step 8) ---
+update_to_display: update_mode=FULL, wave_mode=2 inverted=0
+rc=0
+DONE F2
+=== EIPS DIAG PHASE2 END Tue Sep 22 21:06:41 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Wed Sep 23 11:56:28 UTC 2026 ===
+=== EIPS DIAG PHASE2 END Wed Sep 23 11:56:31 UTC 2026 ===
+=== EIPS DIAG PHASE2 START Wed Sep 23 12:18:04 UTC 2026 ===
+=== EIPS DIAG PHASE2 END Wed Sep 23 12:18:07 UTC 2026 ===

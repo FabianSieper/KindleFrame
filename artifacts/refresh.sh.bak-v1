@@ -1,0 +1,100 @@
+#!/bin/sh
+
+URLS='http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame'
+OUT=/tmp/dashboard.png
+TMP=/tmp/dashboard.png.tmp
+INTERVAL=300
+PIDFILE=/tmp/refresh.pid
+LOG=/mnt/us/refresh.log
+LAST_SUM=/tmp/last_cksum
+
+if [ -f "$PIDFILE" ]; then
+  OLD_PID=$(cat "$PIDFILE" 2>/dev/null)
+  if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+    kill "$OLD_PID" 2>/dev/null
+    sleep 1
+  fi
+fi
+echo $$ > "$PIDFILE"
+trap 'rm -f "$PIDFILE"' EXIT
+
+log() {
+  echo "$(date) $*" >> "$LOG" 2>/dev/null
+}
+
+png_sig_ok() {
+  SIG=$(od -An -tx1 -N8 "$1" 2>/dev/null | tr -d ' \n')
+  [ "$SIG" = "89504e470d0a1a0a" ]
+}
+
+png_dims_ok() {
+  WH=$(od -An -tx1 -j16 -N8 "$1" 2>/dev/null | tr -d ' \n')
+  log "png ihdr ${WH}"
+  [ "$WH" = "00000430000005a8" ] || [ "$WH" = "000005a800000430" ]
+}
+
+cksum_of() {
+  cksum "$1" 2>/dev/null | awk '{print $1}'
+}
+
+download() {
+  URL="$1"
+  rm -f "$TMP"
+  case "$URL" in
+    https://*)
+      if command -v curl >/dev/null 2>&1; then
+        curl -fsS --max-time 45 -o "$TMP" "$URL" >> "$LOG" 2>&1
+        RC=$?
+      else
+        wget -q -T 45 -O "$TMP" "$URL" >> "$LOG" 2>&1
+        RC=$?
+      fi
+      ;;
+    *)
+      wget -q -T 45 -O "$TMP" "$URL" >> "$LOG" 2>&1
+      RC=$?
+      ;;
+  esac
+
+  if [ "$RC" -eq 0 ] && [ -s "$TMP" ] && png_sig_ok "$TMP"; then
+    mv -f "$TMP" "$OUT"
+    return 0
+  fi
+
+  rm -f "$TMP"
+  return 1
+}
+
+while true; do
+  lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null
+  log "cycle start"
+
+  OK=0
+  for URL in $URLS; do
+    log "try $URL"
+    if download "$URL"; then
+      OK=1
+      if png_dims_ok "$OUT"; then
+        NEW_SUM=$(cksum_of "$OUT")
+        OLD_SUM=$(cat "$LAST_SUM" 2>/dev/null)
+        if [ "$NEW_SUM" != "$OLD_SUM" ]; then
+          echo "$NEW_SUM" > "$LAST_SUM"
+          log "image changed, calling eips (cksum $OLD_SUM -> $NEW_SUM)"
+          /usr/sbin/eips -g "$OUT" -f -x 0 -y 0 >> "$LOG" 2>&1
+          log "eips rc=$?"
+        else
+          log "image unchanged (cksum $NEW_SUM), skipping eips"
+        fi
+      else
+        log "dims not 1072x1448, keeping previous image"
+      fi
+      break
+    fi
+  done
+
+  if [ "$OK" -ne 1 ]; then
+    log "all downloads failed"
+  fi
+
+  sleep "$INTERVAL"
+done

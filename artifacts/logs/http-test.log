@@ -1,0 +1,13 @@
+=== HTTP test Tue Sep 22 10:43:43 UTC 2026 ===
+Linux kindle 3.0.35-lab126 #2 PREEMPT Thu Apr 8 09:39:57 UTC 2021 armv7l GNU/Linux
+BUSYBOX=/bin/busybox
+wget
+WIFI[0]=CONNECTED
+Connecting to 192.168.178.108:5678 (192.168.178.108:5678)
+dashboard.png.tmp    100% |*******************************|   360k  0:00:00 ETA
+
+WGET_RC=0
+-rwxrwxrwx    1 root     root        369600 Sep 22 10:43 /mnt/us/dashboard.png.tmp
+PNG_SIG=89504e470d0a1a0a
+update_to_display: update_mode=PARTIAL, wave_mode=257 inverted=0
+RESULT=OK
