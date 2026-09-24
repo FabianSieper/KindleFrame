@@ -6,9 +6,23 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 
 1. `README.md` (state + structure)
 2. This file
-3. `ISSUES.md` (chronology — especially the last 3 entries)
-4. `docs/03-eink-rendering.md` (critical constraints + final architecture + implementation plan)
-5. As needed: `docs/01-hardware.md`, `docs/02-jailbreak.md`, `docs/04-n8n-integration.md`, `docs/05-artifact-manifest.md`
+3. `todos.json` → its `resume` block is the exact continuation point (ground truth)
+4. `ISSUES.md` (chronology — referenced from todos via `issue`)
+5. `docs/03-eink-rendering.md` (critical constraints + final architecture + implementation plan)
+6. As needed: `docs/01-hardware.md`, `docs/02-jailbreak.md`, `docs/04-n8n-integration.md`, `docs/05-artifact-manifest.md`
+
+## TODO workflow — `todos.json` is the ground truth
+
+`todos.json` (repo root) is the machine-readable source of truth for the work: what is done, what is open, where to continue. It is written **for agents**; human-oriented detail lives in `docs/` and `ISSUES.md` and is only referenced from it (`refs`, `issue`), never duplicated.
+
+**"Continue" protocol** — when the user types `continue` (or similar):
+
+1. Read the `resume` block in `todos.json` — it is the exact continuation point. No other context is needed.
+2. Work on **exactly one todo at a time**, respecting `depends_on` and `block_on`.
+3. After **every** state change (start, partial result, done, blocked, direction change) update `todos.json` in the **same commit** as the work itself: `status`, `resume`, `updated_at`. Never commit work with a stale `todos.json` — at any moment the work can be interrupted, and the next agent must be able to resume from `resume` alone.
+4. `done` requires a `verification` note (how it was checked; display-related items: "user verified …").
+5. **Never delete or renumber todos.** Finished entries stay checked off forever (traceability); abandoned work becomes `dropped` with `reason`. New work gets the next free `Tnn` id.
+6. If a todo changes the plan in a way that contradicts a doc, update that doc in the same commit (this repo wins over Notion).
 
 ## Actual state (2026-09-24) — align to THIS, not to older doc descriptions
 
@@ -29,12 +43,13 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 
 - **No free terminal on the device.** All interaction is via MRPI (`;log`, `;get`) and files on `/mnt/us/`. Do not plan on an interactive shell.
 - **No secrets in the repo** (API keys, credential IDs, webhook UUIDs, hostnames beyond the documented endpoint). n8n JSONs stay with placeholders; for any new dump: sanitize first (procedure: `docs/04` §Sanitizing).
+- **No user-specific/personal information in the repo:** no personal names, e-mail addresses, personal hostnames, home-directory paths, account/user IDs. n8n dumps are scrubbed accordingly (procedure: `docs/04` §Sanitizing). LAN IPs are infrastructure and allowed. Documented exceptions (kept as-is by user decision): `artifacts/notes/notizen.md` (user's own session notes) and functional device scripts (e.g. `artifacts/refresh.sh` needs its live endpoint to keep working).
 - **No new large binaries committed:** Kindle update bins (~200 MB each), >3 MB BMP/PNM diagnostic derivatives, test BMPs (4.6 MB). List + reasons: `docs/05-artifact-manifest.md`.
 - **Do not break the card:** `/Volumes/Kindle` is the user's live card. Only point writes for deploys (replace a file), never bulk delete/format — and announce every such action to the user beforehand.
 - **No git on the device.** Device files are managed via the USB card only; this repo is documentation, not a deploy mechanism.
 - **Do not invent results:** display checks can only be done by the user. Mark everything unverified as `open/assumed` (Notion discipline: `[verified]` / `[recalled]` / `[assumption]` / `[open]`).
 
-## Definition of Done — next milestone ticket (saveKindlePNG)
+## Definition of Done — next milestone ticket (saveKindlePNG = todos T12–T17)
 
 1. `saveKindlePNG`: one `compress/zlib` stream over all filter-0 rows → exactly 1 IDAT; IHDR color type 0; CRCs correct (reference implementation: Python recipe in `docs/03`).
 2. `dash get <out> <urls...>`: fetch + Go decode + Floyd-Steinberg grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`.

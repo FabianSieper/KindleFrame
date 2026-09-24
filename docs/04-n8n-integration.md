@@ -2,7 +2,7 @@
 
 ## Access
 
-- **n8n instance:** Docker on host `automation.sieper.uk` (LAN IP 192.168.178.108, container 172.20.0.3). Mac: 192.168.178.132.
+- **n8n instance:** Docker on host `REPLACE_WITH_N8N_HOST` (LAN IP 192.168.178.108, container 172.20.0.3). Mac: 192.168.178.132. (Live endpoint value: functional artifact `artifacts/refresh.sh` — docs stay with placeholders.)
 - **Workflow:** `Rabbit Recognition (Discord)` · ID `Y6YLPaL7w3XFX4-RlygeH` · active (13 nodes in the canonical dump).
 - **Webhook endpoint:** `/webhook/last-rabbit-recognition-frame` (the second webhook node for Flow B serves the same path; its UUID is the secondary one).
 - **Canonical export (sanitized):** `n8n/rabbit-recognition-workflow.json` (API dump 23.09.2026 09:03Z)
@@ -39,7 +39,9 @@ Discord (webhook, "Hase erkannt" message)
 
 ## Sanitizing note (mandatory for every future n8n change)
 
-All JSONs in the repo have the originals replaced by placeholders:
+Two classes must never reach the repo: **secrets** and **user-specific (personal) information**.
+
+Secrets — replaced by placeholders:
 
 | Original (abridged) | Placeholder |
 |---|---|
@@ -48,7 +50,17 @@ All JSONs in the repo have the originals replaced by placeholders:
 | Webhook UUID primary (`2f87…`) | `REPLACE_WITH_WEBHOOK_UUID_1` |
 | Webhook UUID secondary (`8458…`) | `REPLACE_WITH_WEBHOOK_UUID_2` |
 
-**Before commit** always grep for the full original strings (credential ID, both webhook UUIDs, credential name) — the result must be empty. New dumps must be sanitized **before** storage (same 4 replacements). LAN IPs in shell scripts/logs are infrastructure, not secrets — leave them.
+Personal information — **deleted** from API dumps (set to `[]` / removed key):
+
+| Field | Treatment |
+|---|---|
+| `shared[]` (project + user objects: name, e-mail, `creatorId`, …) | removed |
+| `activeVersion.shared`, `activeVersion.workflowPublishHistory` | removed |
+| `authors` (top level or in `activeVersion`) | removed |
+| `personalizationAnswers` | removed |
+| personal hostnames in docs (e.g. the n8n host) | `REPLACE_WITH_N8N_HOST` |
+
+**Before commit** always grep for the full original strings (credential ID, both webhook UUIDs, credential name) **and for any known personal data** (names, e-mails, personal hostnames) — the result must be empty (exceptions: `artifacts/notes/` and functional device scripts, see `AGENTS.md` prohibitions). New dumps must be sanitized **before** storage (same 4 placeholder replacements + PII deletion). LAN IPs in shell scripts/logs are infrastructure, not personal data — leave them.
 
 ## Open (n8n-side)
 
