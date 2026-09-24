@@ -12,7 +12,7 @@ Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/`
 | `.boot` | 510 B | Active boot hook (waits for `eips`+`lipc-set-prop`, starts `refresh.sh`, logs to `/mnt/us/boot.log`) |
 | `reboot.bak` | 7 B | Old reboot hook (kept) |
 | `dash` | 6,291,616 B | Staging binary (v4, mmap). SHA-256 `e27324469c77964c761cfe0a86adb12fb60da370689cfe5f01c4dfba7a63c15d` — **replaced by the I10 build; kept for reference** |
-| `binaries/dash` | 6,291,616 B | Same binary (kept as the canonical slot for the **next** build — I10 step 7) |
+| `binaries/dash` | 6,291,616 B | Same binary (kept as the canonical slot for the **next** build — I10 step 7). 24.09: embedded build-dir debug strings sanitized from a user-specific absolute path to a generic one (same-size in-place patch, code sections untouched); proper fix = rebuild with `-trimpath` once source is in `src/kindle-dash/` (T11) |
 | `RUNME.sh` | 1,402 B | Card root (legacy, inert). `RUNME-orig.bak` = identical copy |
 | `emergency.sh` | 394 B | Card copy (jailbreak boot hook). `emergency.sh.bak` 1,412 B (original backup on card) |
 | `dashboard.png` | 792,764 B | **Current live bistable display**: single-IDAT 8-bit grayscale 1072×1448. SHA-256 `cbf48177d8aa4b86016d4f03656d784646a25250fbed5d9dab01cd4f7952f4ce` |
@@ -68,6 +68,6 @@ Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/`
 | `*.BMP`/`*.PNM` derivatives >3 MB (11 files, 12.8 MB) | Lossy/oversized test detritus; the PNG sources suffice |
 | `FSCK*.REN`, `.Spotlight-V100/`, `.Trashes`, 0 B files | Card/system filesystem hygiene, no project value |
 | System `eips` + other ROM binaries | Unreachable (ROM partition read-only); behavior documented instead (doc 03) |
-| Go source (`/Users/private/kindle-dash/`: `go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`) | On another machine; **copy it in when I10 work starts** (AGENTS.md gap note) |
+| Go source (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`) | Belongs in `src/kindle-dash/` (repo-relative); **user copies it in when I10 work starts** (AGENTS.md path rule) |
 | Mac proxy scripts (v3 era) | Superseded architecture; doc 03 keeps the interface description |
 | Anything containing credentials/webhook UUIDs | Sanitized to placeholders (doc 04); **never commit the originals** |

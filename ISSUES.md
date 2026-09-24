@@ -92,6 +92,7 @@ File-level details + open risks: `docs/03-eink-rendering.md` §Implementation pl
 
 ### Deliberately DOCUMENTED ONLY, NOT IN THE REPO
 
-- Go source `dash` v4 (`/Users/private/kindle-dash/`, another machine) — only the binary included.
+- Go source `dash` v4 — belongs in `src/kindle-dash/` (repo-relative, user copies it in); only the binary included so far.
+- 24.09 (path rule): all user-specific absolute paths removed from docs/configs; the reference binary's embedded build-dir debug strings sanitized in place to a generic path (same size; a `-trimpath` rebuild after T11 is the clean fix).
 - Mac tools (`kindle-proxy.py`, `n8n-proxy2.py` — both replaced/discarded, never used finally).
 - 200-MB update bins, >3-MB BMP/PNM diagnostic derivatives, system `eips` (ROM) — reasons: `docs/05`.
