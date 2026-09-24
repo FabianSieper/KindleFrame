@@ -66,7 +66,7 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - Between the first inventory and the repo build, several files were removed from the card: `eips`/`eips-new`/`eips-symlink` (local copies), `kindle-dash.zip`, `mrpi.log`/`reboot.log`/`eips-test.log`, test `.txt` files, `watchthis/`/`kindle-fertig/`/`kual-mrpi/` directories, `watchthis-jailbreak-r03.zip`, `Update_hotfix_watchthis_custom.bin`.
 - **All** of them exist as local copies and are secured in this repo (`artifacts/jailbreak/`). The **system `eips`** lives on the internal ROM partition (inaccessible) and does **not** go into the repo. `[verified]`
 
-## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — display + orientation verified, size open; T20 in progress — code + build done, deploy pending) ← CURRENT TICKET
+## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — flicker open; T20 done 24.09 abend, user-verified; T21 in progress → I11)
 
 `dash` remains the only binary; `eips` remains the only visible path; the Mac drops out completely:
 
@@ -114,3 +114,12 @@ File-level details + open risks: `docs/03-eink-rendering.md` §Implementation pl
 - 24.09 (path rule): all user-specific absolute paths removed from docs/configs; the reference binary's embedded build-dir debug strings sanitized in place to a generic path (same size; a `-trimpath` rebuild after T11 is the clean fix).
 - Mac tools (`kindle-proxy.py`, `n8n-proxy2.py` — both replaced/discarded, never used finally).
 - 200-MB update bins, >3-MB BMP/PNM diagnostic derivatives, system `eips` (ROM) — reasons: `docs/05`.
+
+
+## I11 — 24.09 abend: T20 verifiziert (Round 2) + T21 (Bild maximieren / Rand minimieren) + Screensaver-Wunsch ← CURRENT TICKET (T21)
+
+- **Round 2 (User, 24.09 abend, nach T20-Deploy + Reboot ~20:37Z):** Boot-Bild = alter Cache (Zoom-Crop des stale 06:43-RGB; Einmaler — Cache hält jetzt das Grayscale-Bild, Boot-Render zeigt das letzte Frame); **erstes Grayscale-Single-IDAT-Render 20:42:53Z** (dl ok + image changed + render rc=0, eips 181 ms) = ganzes Bild + schwarzer Rahmen — User: **„richtig gut!“** → **T20 done** (Safe-Spec end-to-end bestätigt; on-card PNG: 1072×1448, 8-bit, ct 0, 1 IDAT, 463,228 B, SHA 6cdc49d9…). Rand bei s=0.8: „viel zu groß“ → T21. Gerät ging danach in Deep Sleep → **Screensaver erschien** (Wunsch: nie wieder).
+- **Geometrie-Befund:** n8n-Canvas = **1072×1448 = exakt Panel-Größe** → eips rendert 1:1 (kein zweites Letterbox/Crop) → sichtbarer Rand = 100 % dash-DASH_SCALE (s=0.8 → ≈36 % Schwarz; s=1.0 → edge-to-edge = Round-1-„zu groß“-Zustand).
+- **Wunsch 1 (T21):** „das bild soll so groß wie möglich … und so wenig schwarzer rand wie möglich“ → **s=0.95** (≈10 % Schwarz; dünnster noch sichtbarer Rand ≈27 px seitlich / ≈36 px oben-unten; Bild ~19 % größer als bei 0.8). Deployed 24.09 abend (refresh.sh v6 = 3,714 B, SHA 2ebe400c…, Point-Write /Volumes/Kindle/refresh.sh, SHA Repo == Karte, rwx------; sicherer Trigger = Reboot). Fallbacks ohne Rebuild: 0.9 (≈18 % Schwarz) / 1.0 (kein Rand).
+- **Wunsch 2 (Screensaver nie):** Gerät soll nie den Screensaver zeigen → „Wach bleiben“ (Settings → Device → „Stay Awake“; exakte deutsche Bezeichnung [assumed], im refresh.sh-Header dokumentiert). War sie beim Sleep-Ereignis an? [open — User gefragt].
+- **Status:** T21 in progress (v6 deployed; wartet auf Round 3: Reboot + „Wach bleiben“ + ~10 min wach → Verifikation Bild/Rand/Flackern/Screensaver). T17 offen (Flackern nicht gemeldet).

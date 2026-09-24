@@ -1,5 +1,5 @@
 #!/bin/sh
-# refresh.sh v5 — Kindle Voyage live dashboard via dash (static Go binary)
+# refresh.sh v6 — Kindle Voyage live dashboard via dash (static Go binary)
 # 10s tick | download every 300s | render ONLY on image change (cksum)
 # NOTE: ticks advance only while the device is AWAKE — in deep sleep the loop
 # freezes between wakes (resumes on wake). For a fresh dashboard keep the
@@ -14,8 +14,8 @@ OUT=/tmp/dashboard.png
 CACHE=/mnt/us/dashboard.png
 PIDFILE=/tmp/refresh.pid
 LOG=/mnt/us/refresh.log
-# T20: downscale + black letterbox (0..1; 1.0 = full size, no margin)
-export DASH_SCALE=0.8
+# T20: downscale + black letterbox (0..1; 1.0 = full size, no margin; T21: 0.95)
+export DASH_SCALE=0.95
 
 if [ -f "$PIDFILE" ]; then
   OLD=$(cat "$PIDFILE" 2>/dev/null)
@@ -80,7 +80,7 @@ if [ ! -x "$DASH" ]; then
   log "FATAL: dash binary missing"
   exit 1
 fi
-log "v5 start pid=$$"
+log "v6 start pid=$$"
 
 if [ ! -s "$OUT" ] && [ -s "$CACHE" ]; then
   cp -f "$CACHE" "$OUT"

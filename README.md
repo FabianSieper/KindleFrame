@@ -12,14 +12,14 @@ This repository replaces the project's Notion page as the canonical documentatio
 |---|---|
 | WatchThis jailbreak (Legacy, 21.09.2026) | ✅ `docs/02-jailbreak.md` |
 | n8n webhook → PNG 1072×1448 | ✅ `docs/04-n8n-integration.md` |
-| On-device daemon `refresh.sh` (v4: 10 s tick, 30 s render, 300 s download) | ✅ `artifacts/` |
+| On-device daemon `refresh.sh` (v6: 10 s tick, 300 s download, render only on image change, DASH_SCALE=0.95) | ✅ `artifacts/` |
 | `dash` (static Go binary, Go 1.23.12, DASH_SCALE letterbox seit T20): fetch + decode + grayscale + `eips -g` render | ✅ auf Karte: T20-Build seit 24.09 ~20:20Z (T20-Deploy); T16-Build seit 24.09 13:29Z (T17-Deploy) |
 | **Visible rendering** | ✅ **via `eips -g`** (24.09 user: visible + orientation OK; pre-T16 the mmap writes were invisible — "nothing happens") |
-| Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed 24.09 13:29Z; T17 in progress; T20 deployed 24.09 ~20:20Z (Verifikation Round 2 offen)** |
-| Image size on display | ❌ edge-to-edge, "too big" (user 24.09) → **T20** (DASH_SCALE letterbox; code + rebuild done 17:42Z, **deployed 24.09 ~20:20Z**, verification round 2 pending) |
+| Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T17 in progress (flicker); T20 done (User-Verifikation 24.09 abend, Round 2: „richtig gut“); T21 in progress (DASH_SCALE 0.95, v6 deployed 24.09 abend)** |
+| Image size on display | ⏳ round 2: whole image visible at s=0.8, frame „viel zu groß“ (user 24.09 abend) → **T21: DASH_SCALE 0.95** (≈10 % black, thinnest visible margin; v6 deployed 24.09 abend, round 3 pending) |
 | Flicker | ⏳ not yet reported by user (T17 final acceptance) |
 
-**→ Next ticket:** **T20 in progress** (DASH_SCALE letterbox — code + tests + rebuild done 17:42Z, **deployed 24.09 ~20:20Z (Point-Write, User-OK)**; remaining: user reboot + Stay Awake + ~10 min awake + verification round 2; exact resume in `todos.json`); then **T17 final acceptance** (size + flicker, by the user). Rules for continuing AIs: **`AGENTS.md`**.
+**→ Next ticket:** **T21 in progress** (maximize image / minimize border — DASH_SCALE 0.95, refresh.sh v6, deployed 24.09 abend as Point-Write, SHA-verified; awaiting user: reboot + „Wach bleiben“ (Stay Awake) + ~10 min awake + verification round 3; exact resume in `todos.json`); then close **T21** (+ **T17** if flicker is acceptable). **T20 = done** (user-verified round 2, 24.09 abend). Rules for continuing AIs: **`AGENTS.md`**.
 
 ## Repo structure
 
