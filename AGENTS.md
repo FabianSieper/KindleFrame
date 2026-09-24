@@ -29,7 +29,7 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 - On the card, **`refresh.sh` v4** + **`dash`** (static Go binary, mmap framebuffer writes) are running. The `dash` render is **not visible** (no EPDC refresh triggered — confirmed by user: "nothing happens"). The currently visible image is the **bistably retained** `dashboard.png` (single-IDAT grayscale, from the `eips` path of the v2/v3 era).
 - The final architecture is **decided but NOT implemented**: `dash` = fetch + decode + grayscale + **`saveKindlePNG`** (single IDAT); display = **`eips -g`**. See `ISSUES.md` I10.
 - The project's Notion pages partly describe older states (v2/v3); this repo is newer. In case of conflict: **this repo wins**.
-- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`) lives in `/Users/private/kindle-dash/` on **another machine** — `/Users/private` on this machine is **empty**. The source is **not** in the repo and must **not be invented**. To build: use the binary in `artifacts/binaries/dash` as reference + re-implement per plan, or obtain the source from the user.
+- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`) is in `/Users/private/kindle-dash/`. On this machine `/Users/private` **exists** but is owned by another local user (`private`, mode `700`) → **not readable from this account** (24.09: permission denied; the earlier "empty" finding is stale). The source is **not** in the repo and must **not be invented**. The user must copy it to a readable location (e.g. `~/Downloads/KindleFrame/src/`) or grant read access; until then the binary in `artifacts/binaries/dash` is the only reference.
 
 ## Hard technical rules (from `docs/03`)
 

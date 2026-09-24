@@ -55,5 +55,5 @@ n8n/
 ## How to continue (short version)
 
 1. Read `AGENTS.md` (mandatory), then `todos.json` → `resume` (the exact continuation point; one todo at a time, `todos.json` updated in every commit).
-2. The Go source lives in `/Users/private/kindle-dash/` — **not on this machine, not in the repo** (the binary `artifacts/binaries/dash` is included). Implement plan steps 1–7 from `ISSUES.md` I10: `saveKindlePNG` → `dash get` writes PNG → `dash render` = `exec eips -g` → static build → deploy → user verification.
+2. The Go source is in `/Users/private/kindle-dash/` — on this machine that dir exists but is owned by another local user (mode 700, currently unreadable); it is **not in the repo** (the binary `artifacts/binaries/dash` is included). Implement plan steps 1–7 from `ISSUES.md` I10: `saveKindlePNG` → `dash get` writes PNG → `dash render` = `exec eips -g` → static build → deploy → user verification.
 3. Verification ALWAYS goes through the user (the display is not visible to us): visibility, orientation (t180 reference), flicker.
