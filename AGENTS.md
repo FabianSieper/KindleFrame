@@ -26,14 +26,14 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 
 ## Actual state (2026-09-24) — align to THIS, not to older doc descriptions
 
-- On the card, **`refresh.sh` v4** + **`dash`** (static Go binary, mmap framebuffer writes) are running. The `dash` render is **not visible** (no EPDC refresh triggered — confirmed by user: "nothing happens"). The currently visible image is the **bistably retained** `dashboard.png` (single-IDAT grayscale, from the `eips` path of the v2/v3 era).
-- The final architecture is **decided and implemented in the source** (T12–T14): `dash` = fetch + decode + grayscale + **`saveKindlePNG`** (single IDAT); display = **`eips -g`** (`display()` exec, rc + duration → `/mnt/us/diag.log`). The on-card binary is still the old mmap build: T16 (static Go ≤ 1.23 rebuild) + T17 (deploy + user verification) remain. See `ISSUES.md` I10.
+- On the card since 24.09 13:29Z (T17 deploy, point-write, announced + authorized): **`refresh.sh` v4** (SHA `d8d84e99…`) + **`dash`** = the T16 build (SHA `ce74c7b4…`, static Go 1.23.12, render = `exec /usr/sbin/eips -g`). User reboot ~14:19Z = effective trigger; logs green (boot render rc=0, eips rc=0 with durations). User verification 24.09: **visible ✅, orientation ✅ (t180 reference), size ❌** (edge-to-edge, "too big") → **T20** (DASH_SCALE letterbox); flicker not yet reported. Note: the frame the user currently sees is the **bistably retained v2/v3-era eips grayscale**; the on-card `dashboard.png` cache was measured 24.09 14:57Z as **RGB colortype 2, 25 IDAT** (the "single-IDAT grayscale" wording was a doc error — corrected) — never eips-rendered pre-T16; the T17-boot render (~14:19Z, rc=0) is faithful-vs-zoom-crop **[open]**.
+- The final architecture is **implemented (T12–T16) and on the card** (deployed 24.09 13:29Z, T17): `dash` = fetch + decode + grayscale + **`saveKindlePNG`** (single IDAT); display = **`eips -g`** (`display()` exec, rc + duration → `/mnt/us/diag.log`). T17 stays **in progress** until final acceptance (size → T20, flicker); T18/T19 (n8n grayscale) are blocked on the user's n8n API key (401). See `ISSUES.md` I10 + `todos.json` (next ticket = T20).
 - The project's Notion pages partly describe older states (v2/v3); this repo is newer. In case of conflict: **this repo wins**.
-- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`, `convert_test.go`, `main_test.go`, flat layout, no `cmd/dash/`) **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts). Its machine-specific origin location is deliberately **not recorded** in this repo (path rule below). The binary in `artifacts/binaries/dash` is the pre-T16 (mmap) build; T16 replaces it (Go ≤ 1.23, `-trimpath -ldflags="-s"`). The source must **not be invented**.
+- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`, `convert_test.go`, `main_test.go`, flat layout, no `cmd/dash/`) **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts). Its machine-specific origin location is deliberately **not recorded** in this repo (path rule below). The binary in `artifacts/binaries/dash` is the **T16 build** (Go 1.23.12, 5,177,496 B, SHA-256 `ce74c7b4…`, deployed on card 24.09 13:29Z, repo == card); the old mmap build is kept in the repo as `artifacts/dash`. The T20 rebuild (DASH_SCALE letterbox) replaces `binaries/dash` again. The source must **not be invented**.
 
 ## Hard technical rules (from `docs/03`)
 
-- eips output PNG: **exactly 1 IDAT chunk**, **IHDR color type 0** (8-bit grayscale), 1072×1448 (or 1448×1072), bit depth 8, interlace 0.
+- eips output PNG: **exactly 1 IDAT chunk**, **IHDR color type 0** (8-bit grayscale), 1072×1448 (or 1448×1072), bit depth 8, interlace 0. **Caveat 24.09:** the on-card `dashboard.png` was measured as RGB colortype 2 / 25 IDAT (doc error, corrected) and was eips-rendered at the T17 boot — the rule therefore stays the **verified-safe output spec / reliability heuristic**, not a verified complete description of eips's parser (see `docs/03` correction note).
 - eips `-b` (BMP) is a **NO-OP** on this device. BMP paths: forgotten.
 - Visible E-Ink updates **only** via `eips` (EPDC wave). mmap write alone = invisible.
 - Console geometry: `rotate=3` (270°), correct display = **t180** (transpose + 180° = 90° CW + horizontal flip).
@@ -50,14 +50,14 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 - **No git on the device.** Device files are managed via the USB card only; this repo is documentation, not a deploy mechanism.
 - **Do not invent results:** display checks can only be done by the user. Mark everything unverified as `open/assumed` (Notion discipline: `[verified]` / `[recalled]` / `[assumption]` / `[open]`).
 
-## Definition of Done — milestone ticket (todos T12–T17; items 1–3 done in T12/T13/T14, remaining = T15–T17)
+## Definition of Done — milestone ticket (todos T12–T17; items 1–5 done — T12/T13/T14 + T16 build + T17 deploy 24.09 13:29Z; items 6–7 in progress; T20 open)
 
 1. `saveKindlePNG`: one `compress/zlib` stream over all filter-0 rows → exactly 1 IDAT; IHDR color type 0; CRCs correct (reference implementation: Python recipe in `docs/03`). ✅ T12
 2. `dash get <out> <urls...>`: fetch + Go decode + Floyd-Steinberg grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`. ✅ T13 (T14: get is write-only, no display)
 3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0`. ✅ T14 (rc + duration → `/mnt/us/diag.log`)
-4. Static ARM build (`CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7`, Go ≤ 1.23), watch size (current: 6.29 MB).
-5. Deploy to `/mnt/us/dash` (size change triggers hot re-stage in `refresh.sh` v4) + reboot.
-6. **User verification:** dashboard visible? orientation (t180 reference)? flicker acceptable?
-7. Log analysis `refresh.log`: `dl ok` + `render rc=0`.
+4. Static ARM build (`CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7`, Go ≤ 1.23), watch size (current: 6.29 MB). ✅ T16 (Go 1.23.12, 5,177,496 B, `artifacts/binaries/dash`)
+5. Deploy to `/mnt/us/dash` (size change triggers hot re-stage in `refresh.sh` v4) + reboot. ✅ T17 (deploy executed 24.09 13:29Z, point-write, repo == card SHA-verified; effective trigger = user reboot ~14:19Z)
+6. **User verification:** dashboard visible? orientation (t180 reference)? flicker acceptable? ⏳ in progress (user 24.09: visible ✅, orientation ✅, size ❌ → **T20**; flicker not yet reported)
+7. Log analysis `refresh.log`: `dl ok` + `render rc=0`. ⏳ partial (boot render `render rc=0` 14:19:50Z + eips rc=0 @14:20:14Z; first `dl ok` unobserved — card log gap after ~14:20Z, device likely sleeping [open])
 
 Only after that: open items from `ISSUES.md` (n8n grayscale optional, home-screen persistence of `refresh.sh`, download interval / flicker trade-off).

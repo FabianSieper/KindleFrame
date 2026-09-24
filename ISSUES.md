@@ -46,13 +46,14 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - v3 (3,393 B, on card as `refresh.sh.bak-v3`): + `png_valid()` gate (sig/ihdr-color/IDAT count) + emergency re-show. `[verified]`
 - All 3 versions in `artifacts/` — versions with timestamps in the header.
 
-## I7 — dash v4 (23.09, currently live, BUT invisible)
+## I7 — dash v4 (23.09; the v4 render was invisible — replaced on card 24.09 13:29Z by the T16 build, T17 deploy)
 
 - ✅ Implemented + deployed: `dash` (6,291,616 B static ARM-ELF, SHA-256 `e27324469c77964c761cfe0a86adb12fb60da370689cfe5f01c4dfba7a63c15d`): fetch (`http`, 15 s timeout, 3 URLs round-robin, 10 MB cap), decode (Go `image/png`: multi-IDAT + RGB **OK as input**), Floyd-Steinberg grayscale, render = **mmap framebuffer write**.
 - ✅ `refresh.sh` v4 (2,720 B): 10-s tick; render 30 s; download 300 s; PID guard; hot re-stage (new `dash` on size change → `/tmp/dash`, since `/mnt/us` is no-exec).
 - ❌ **Result:** `refresh.log` shows clean `dl ok 792764`/`render ok 3697` cycles, but the user sees **no change**: "nothing happens".
 - `[verified]` **Root cause:** the E-Ink display updates visibly **only** through EPDC refresh waves; a raw mmap write changes framebuffer memory only and triggers no wave. `eips` is the only proven visible path. (Side finding: `dash get`'s validation is intact — the downloaded PNG is single-IDAT grayscale and matches `dashboard.png`.)
-- Status: v4 keeps running (harmless, just invisible) and forms the basis for I10.
+- Status (24.09): the old v4 `dash` mmap build was **replaced on the card 24.09 13:29Z** by the T16 build (T17 deploy, `/mnt/us/dash` SHA `ce74c7b4…`); the I10 binary is the on-card production path.
+- **CORRECTED 24.09 (card-file measurement 14:57Z):** the card's `dashboard.png` (SHA `cbf48177…`, 792,764 B) is actually **RGB (IHDR colortype 2) with 25 IDAT chunks** — the "single-IDAT grayscale" above (and the same wording in `docs/05`, `AGENTS.md`) was a **doc error**. It was **never eips-rendered pre-T16** (mmap writes invisible anyway); it **was** eips-rendered at the T17 boot (~14:19Z, rc=0) — whether that render was faithful or the classic first-IDAT zoom-crop is **[open]** (user 24.09: visible, edge-to-edge, "too big" → T20).
 
 ## I8 — n8n workflow end state (23.09)
 
@@ -65,7 +66,7 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - Between the first inventory and the repo build, several files were removed from the card: `eips`/`eips-new`/`eips-symlink` (local copies), `kindle-dash.zip`, `mrpi.log`/`reboot.log`/`eips-test.log`, test `.txt` files, `watchthis/`/`kindle-fertig/`/`kual-mrpi/` directories, `watchthis-jailbreak-r03.zip`, `Update_hotfix_watchthis_custom.bin`.
 - **All** of them exist as local copies and are secured in this repo (`artifacts/jailbreak/`). The **system `eips`** lives on the internal ROM partition (inaccessible) and does **not** go into the repo. `[verified]`
 
-## I10 — FINAL ARCHITECTURE (T12–T14 done; T15–T17 open) ← CURRENT TICKET
+## I10 — FINAL ARCHITECTURE (T12–T16 done; T17 in progress — display + orientation verified, size open; T20 open) ← CURRENT TICKET
 
 `dash` remains the only binary; `eips` remains the only visible path; the Mac drops out completely:
 
@@ -83,16 +84,24 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 1. **`saveKindlePNG`** (Go): prefix every row with filter 0, **one** `compress/zlib` stream (whole image, no ~32-KB splitting like `image/png`), exactly **1 IDAT chunk**, IHDR color type `00`, correct CRCs. Reference: Python recipe + validation shell in `docs/03`. **[done T12]**
 2. `dash get <out> <urls…>`: fetch + decode + grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`. **[done T13]** (T14: `get` no longer displays — the render step is the single EPDC wave per cycle.)
 3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0` (partial region as before; full only when needed). **[done T14]** (rc + duration → `/mnt/us/diag.log`; exec-permission risk stays open until T17.)
-4. Static ARM build (Go ≤ 1.23, `GOARM=7`, `-ldflags="-s"`), keep `dash` < ~7 MB; replace `/mnt/us/dash` (size change → hot re-stage kicks in) + reboot.
-5. Check `refresh.log`: `dl ok` (size ~390–420 KB expected) + `render rc=0`.
-6. **User verification (mandatory, display-side):** visible? t180 orientation? flicker/interval OK?
-7. Optional: switch the n8n side to grayscale (relieves the device, not needed for correctness) + open item from I8 (API key).
+4. Static ARM build (Go ≤ 1.23, `GOARM=7`, `-ldflags="-s"`), keep `dash` < ~7 MB; replace `/mnt/us/dash` (size change → hot re-stage kicks in) + reboot. **[done T16 — Go 1.23.12, 5,177,496 B, `artifacts/binaries/dash` (repo == card); deployed on card 24.09 13:29Z]**
+5. Check `refresh.log`: `dl ok` (size ~390–420 KB expected) + `render rc=0`. **[partly done T17 — boot render `render rc=0` (14:19:50Z) + eips rc=0 with durations 3.244 s / 2.636 s / 395.8 ms @14:20:14Z; first `dl ok` unobserved — card log gap after ~14:20Z, device likely sleeping [open]]**
+6. **User verification (mandatory, display-side):** visible? t180 orientation? flicker/interval OK? **[in progress T17 — user 24.09: visible ✅, orientation ✅ (t180 reference), size ❌ "edge-to-edge, too big" → T20; flicker/interval NOT yet reported]**
+7. Optional: switch the n8n side to grayscale (relieves the device, not needed for correctness) + open item from I8 (API key). **[open — T18/T19 blocked on the user's n8n API key (401, I2/I8)]**
 
 File-level details + open risks: `docs/03-eink-rendering.md` §Implementation plan.
 
+### Status 24.09 (T16 build deployed 13:29Z — user verification round 1)
+
+- **Deploy** (13:29Z, point-write, announced + user-authorized): `/mnt/us/dash` = repo `artifacts/binaries/dash` (SHA `ce74c7b4…`), `/mnt/us/refresh.sh` = repo `artifacts/refresh.sh` (SHA `d8d84e99…`); repo == card re-verified after the write.
+- **Effective trigger:** user reboot ~14:19Z. `refresh.log`: staged new dash, v4 start pid=6026, boot render rc=0 (14:19:50Z). `diag.log`: eips rc=0, durations 3.244 s / 2.636 s / 395.8 ms @14:20:14Z → **exec-permission risk resolved** (pre-T14 risk).
+- **Card log gap** after 14:19:50Z (`refresh.log`) / 14:20:14Z (`diag.log`); first download ~300 s later unobserved — device likely sleeping, no error indication [open].
+- **User verification round 1 (24.09):** dashboard **visible** ✅, **orientation** ✅ (t180 reference), **size ❌** ("füllt den ganzen screen aus, ist aber zu groß" = edge-to-edge, no margin) → **T20** (DASH_SCALE letterbox). Flicker: not reported.
+- **Card-file measurement (14:57Z, PNG chunk walk):** card `dashboard.png` (SHA `cbf48177…`, 792,764 B) = 1072×1448, 8-bit, **colortype 2 (RGB), 25 IDAT** → the "single-IDAT grayscale, currently visible" wording in this repo was a **doc error** (corrected here + in `docs/03`, `docs/05`, `AGENTS.md`). The 1-IDAT + colortype 0 rule stays the **verified-safe output spec / reliability heuristic** (all ✅ rows + failing 6/19-IDAT rows in the `docs/03` proof table); it is NOT a verified complete description of eips's parser. The frame the user actually sees is the v2/v3-era eips-rendered grayscale, bistably retained.
+
 ### Deliberately DOCUMENTED ONLY, NOT IN THE REPO
 
-- Go source `dash` v4 — belongs in `src/kindle-dash/` (repo-relative, user copies it in); only the binary included so far.
+- Go source `dash` v4 — **[resolved T11]** in `src/kindle-dash/` (repo-relative, byte-verified vs Notion Artifacts; AGENTS.md path rule — no machine-specific origin path recorded).
 - 24.09 (path rule): all user-specific absolute paths removed from docs/configs; the reference binary's embedded build-dir debug strings sanitized in place to a generic path (same size; a `-trimpath` rebuild after T11 is the clean fix).
 - Mac tools (`kindle-proxy.py`, `n8n-proxy2.py` — both replaced/discarded, never used finally).
 - 200-MB update bins, >3-MB BMP/PNM diagnostic derivatives, system `eips` (ROM) — reasons: `docs/05`.
