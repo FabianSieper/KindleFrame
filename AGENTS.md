@@ -27,9 +27,9 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 ## Actual state (2026-09-24) — align to THIS, not to older doc descriptions
 
 - On the card, **`refresh.sh` v4** + **`dash`** (static Go binary, mmap framebuffer writes) are running. The `dash` render is **not visible** (no EPDC refresh triggered — confirmed by user: "nothing happens"). The currently visible image is the **bistably retained** `dashboard.png` (single-IDAT grayscale, from the `eips` path of the v2/v3 era).
-- The final architecture is **decided but NOT implemented**: `dash` = fetch + decode + grayscale + **`saveKindlePNG`** (single IDAT); display = **`eips -g`**. See `ISSUES.md` I10.
+- The final architecture is **decided and implemented in the source** (T12–T14): `dash` = fetch + decode + grayscale + **`saveKindlePNG`** (single IDAT); display = **`eips -g`** (`display()` exec, rc + duration → `/mnt/us/diag.log`). The on-card binary is still the old mmap build: T16 (static Go ≤ 1.23 rebuild) + T17 (deploy + user verification) remain. See `ISSUES.md` I10.
 - The project's Notion pages partly describe older states (v2/v3); this repo is newer. In case of conflict: **this repo wins**.
-- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`, flat layout, no `cmd/dash/`) belongs in **`src/kindle-dash/`** (repo-relative) — it is **not in the repo yet**; the user copies it in. Its machine-specific origin location is deliberately **not recorded** in this repo (path rule below). Until then the binary in `artifacts/binaries/dash` is the only reference. The source must **not be invented**.
+- The **Go source** (`go.mod`, `main.go`, `render.go`, `convert.go`, `fb_linux.go`, `fb_stub.go`, `convert_test.go`, `main_test.go`, flat layout, no `cmd/dash/`) **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts). Its machine-specific origin location is deliberately **not recorded** in this repo (path rule below). The binary in `artifacts/binaries/dash` is the pre-T16 (mmap) build; T16 replaces it (Go ≤ 1.23, `-trimpath -ldflags="-s"`). The source must **not be invented**.
 
 ## Hard technical rules (from `docs/03`)
 
@@ -50,11 +50,11 @@ This repo is the complete working documentation of the KindleFrame project (E-In
 - **No git on the device.** Device files are managed via the USB card only; this repo is documentation, not a deploy mechanism.
 - **Do not invent results:** display checks can only be done by the user. Mark everything unverified as `open/assumed` (Notion discipline: `[verified]` / `[recalled]` / `[assumption]` / `[open]`).
 
-## Definition of Done — next milestone ticket (saveKindlePNG = todos T12–T17)
+## Definition of Done — milestone ticket (todos T12–T17; items 1–3 done in T12/T13/T14, remaining = T15–T17)
 
-1. `saveKindlePNG`: one `compress/zlib` stream over all filter-0 rows → exactly 1 IDAT; IHDR color type 0; CRCs correct (reference implementation: Python recipe in `docs/03`).
-2. `dash get <out> <urls...>`: fetch + Go decode + Floyd-Steinberg grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`.
-3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0`.
+1. `saveKindlePNG`: one `compress/zlib` stream over all filter-0 rows → exactly 1 IDAT; IHDR color type 0; CRCs correct (reference implementation: Python recipe in `docs/03`). ✅ T12
+2. `dash get <out> <urls...>`: fetch + Go decode + Floyd-Steinberg grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`. ✅ T13 (T14: get is write-only, no display)
+3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0`. ✅ T14 (rc + duration → `/mnt/us/diag.log`)
 4. Static ARM build (`CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7`, Go ≤ 1.23), watch size (current: 6.29 MB).
 5. Deploy to `/mnt/us/dash` (size change triggers hot re-stage in `refresh.sh` v4) + reboot.
 6. **User verification:** dashboard visible? orientation (t180 reference)? flicker acceptable?

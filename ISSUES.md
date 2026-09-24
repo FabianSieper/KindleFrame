@@ -65,7 +65,7 @@ Legend: ✅ held · ❌ discarded/failed · ⏳ open. All entries compiled from 
 - Between the first inventory and the repo build, several files were removed from the card: `eips`/`eips-new`/`eips-symlink` (local copies), `kindle-dash.zip`, `mrpi.log`/`reboot.log`/`eips-test.log`, test `.txt` files, `watchthis/`/`kindle-fertig/`/`kual-mrpi/` directories, `watchthis-jailbreak-r03.zip`, `Update_hotfix_watchthis_custom.bin`.
 - **All** of them exist as local copies and are secured in this repo (`artifacts/jailbreak/`). The **system `eips`** lives on the internal ROM partition (inaccessible) and does **not** go into the repo. `[verified]`
 
-## I10 — FINAL ARCHITECTURE (decided, NOT implemented) ← NEXT TICKET
+## I10 — FINAL ARCHITECTURE (T12–T14 done; T15–T17 open) ← CURRENT TICKET
 
 `dash` remains the only binary; `eips` remains the only visible path; the Mac drops out completely:
 
@@ -80,9 +80,9 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 
 ### Implementation plan (in this order)
 
-1. **`saveKindlePNG`** (Go): prefix every row with filter 0, **one** `compress/zlib` stream (whole image, no ~32-KB splitting like `image/png`), exactly **1 IDAT chunk**, IHDR color type `00`, correct CRCs. Reference: Python recipe + validation shell in `docs/03`.
-2. `dash get <out> <urls…>`: fetch + decode + grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`.
-3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0` (partial region as before; full only when needed).
+1. **`saveKindlePNG`** (Go): prefix every row with filter 0, **one** `compress/zlib` stream (whole image, no ~32-KB splitting like `image/png`), exactly **1 IDAT chunk**, IHDR color type `00`, correct CRCs. Reference: Python recipe + validation shell in `docs/03`. **[done T12]**
+2. `dash get <out> <urls…>`: fetch + decode + grayscale → `saveKindlePNG` → `/mnt/us/dashboard.png`. **[done T13]** (T14: `get` no longer displays — the render step is the single EPDC wave per cycle.)
+3. `dash render <file>`: `exec /usr/sbin/eips -g <file> -x 0 -y 0` (partial region as before; full only when needed). **[done T14]** (rc + duration → `/mnt/us/diag.log`; exec-permission risk stays open until T17.)
 4. Static ARM build (Go ≤ 1.23, `GOARM=7`, `-ldflags="-s"`), keep `dash` < ~7 MB; replace `/mnt/us/dash` (size change → hot re-stage kicks in) + reboot.
 5. Check `refresh.log`: `dl ok` (size ~390–420 KB expected) + `render rc=0`.
 6. **User verification (mandatory, display-side):** visible? t180 orientation? flicker/interval OK?

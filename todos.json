@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-24T12:48Z",
+  "updated_at": "2026-09-24T13:02Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T14",
-    "state": "24.09: T13 DONE — main.go get() now wires fetch→pngDecode→toGray (device-side Floyd-Steinberg 8-bit)→kindlePNG (T12 single-IDAT builder)→atomic write to <out>.png→render(); get() applies NO device-side rotation/mirror (image arrives pre-oriented from n8n; the remaining device-side transpose/DASH_FLIPX/Y live in fb_linux.go writeFB and are dropped with the mmap path in T14/T15). convert.go: saveKindlePNG refactored to delegate to a new kindlePNG(w,h,gray) []byte builder (shared path; keeps the len check + os.WriteFile). TestGet added (httptest 1072×1448). linux/arm GOARM=7 build now 6,357,152 B (was 6,291,616; kindlePNG no longer dead code → +65,536 B). On card (unchanged): refresh.sh v4 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent of T14-T17).",
-    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T14 (fb_linux.go: replace the mmap framebuffer write/display path with `exec /usr/sbin/eips -g <file> -x 0 -y 0`; drop transpose + DASH_FLIPX/Y; log the exec rc to diag.log; RISK: a static binary may lack permission to exec eips (AppArmor/seccomp) — fallback = dash stops at write-PNG-only and refresh.sh itself calls eips afterwards). Then T15 (fb_stub.go PGM for Mac dev), T16 (Go ≤1.23 + -trimpath static build + size check vs 6.29 MB), T17 (deploy + USER verification — the only display checks that count). After T17 proves the device path, revisit T18 (still blocked on T19 API key). After every state change: update this resume block + updated_at, commit together with the work."
+    "next_todo": "T15",
+    "state": "24.09: T14 DONE — fb_linux.go: display(in) = exec.CommandContext (30 s timeout) of /usr/sbin/eips -g <in> -x 0 -y 0; rc (0 / *exec.ExitError code / -1 on launch error or timeout) + duration ALWAYS appended to /mnt/us/diag.log via best-effort diagf() (UTC, failed writes dropped). Deleted: mmap framebuffer path, writeFB, DASH_FLIPX/Y reads, dead byte-buffer transpose (convert.go). render.go: render(in) = thin display(in) wrapper; committed pngDecode kept. main.go: get() no longer calls render() — get = write-only (fetch→decode→grayscale→single-IDAT PNG), render = the one EPDC wave per cycle (driven by refresh.sh); CLI render takes exactly 1 arg. fb_stub.go (non-linux dev): display → P5 PGM to /tmp/dash-out.pgm (DASH_FB override). artifacts/refresh.sh: comments-only T14 update (2,599 B, SHA d8d84e99…; call pattern byte-stable; on-card copy stays pre-T14 2,720 B until T17). Docs synced (docs/03 plan 1-5 ✅, ISSUES I10 items 1-3 done, README/AGENTS actual state, docs/05 v4 behavior rewritten). LOCAL verification green (build/vet/test, darwin + linux/arm cross-compile, DASH_FB stub smoke). UNVERIFIED on device (T17): eips exec rc, diag.log, user display check (visible / t180 orientation / flicker). On card (unchanged): refresh.sh v4 pre-T14 + dash (mmap, INVISIBLE) running; visible = bistable dashboard.png. T19/T18 still blocked on the user's n8n API key (independent).",
+    "how_to_resume": "Work exactly one todo at a time, respecting depends_on. Next = T15 (fb_stub.go cleanup: hand-written itoa → strconv.Itoa, drop dead branches, keep DASH_FB PGM override; re-verify gofmt/build/vet/test + linux/arm cross-compile sanity + DASH_FB smoke). Then T16 (GOTOOLCHAIN=go1.23.x CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags=-s; verify static ARM via file/go version, no /Users in strings, size < ~7 MB vs T13 baseline 6,357,152 B; replace artifacts/binaries/dash + docs/05 SHA in the same commit). Then T17 (announce card write; cp new dash + updated refresh.sh → /Volumes/Kindle; hot re-stage on size change, no reboot needed; STOP and request user verification: visible? t180 orientation? flicker? + readbacks /mnt/us/diag.log (eips rc) and /mnt/us/refresh.log (dl ok / render rc)). Fallback if eips rc≠0 persists: dash write-PNG-only + refresh.sh calls /usr/sbin/eips itself (docs/03 fallback). After T17 success: update README current-state + docs (repo wins over Notion). After every state change: update this resume block + updated_at, commit together with the work."
   },
   "todos": [
     {
@@ -150,11 +150,13 @@
     {
       "id": "T14",
       "title": "fb_linux.go display(): replace mmap with exec /usr/sbin/eips -g <file> -x 0 -y 0",
-      "status": "open",
+      "status": "done",
       "issue": "I10-3",
       "depends_on": ["T11"],
       "refs": ["docs/03-eink-rendering.md (eips flag table + open risks)", "AGENTS.md (Definition of Done 3)"],
-      "details": "RISK: static binary may lack permission to exec eips (AppArmor/seccomp). Fallback if rc!=0 persists: dash stops at 'write PNG only' and refresh.sh itself calls eips afterwards. Log the exec result to diag.log either way."
+      "details": "fb_linux.go: display(in string) = exec.CommandContext (30 s) of /usr/sbin/eips -g <in> -x 0 -y 0; rc (0 / *exec.ExitError code / -1 on launch error or timeout) + duration ALWAYS appended to /mnt/us/diag.log via new best-effort diagf() (UTC, failed writes dropped). Removed with the mmap path: writeFB, DASH_FLIPX/DASH_FLIPY env reads, and the dead byte-buffer transpose in convert.go. render.go: render(in) is now a thin display(in) wrapper (committed pngDecode kept). main.go: get() no longer calls render() — get = write-only (steps 1-3 of the docs/03 diagram), render = the one EPDC wave per cycle (driven by refresh.sh, call pattern byte-stable); CLI render takes exactly 1 arg (old [fbpath] gone). fb_stub.go (non-linux dev): display → P5 PGM to /tmp/dash-out.pgm (DASH_FB override kept). artifacts/refresh.sh: comments-only update (2,599 B, SHA d8d84e99…, was 2,720 B / b1c06190…). RISK (open until T17): static binary may lack permission to exec eips (AppArmor/seccomp on ROM); rc is logged to diag.log either way; fallback if rc!=0 persists = dash stops at write-PNG-only and refresh.sh itself calls eips (docs/03).",
+      "done_at": "2026-09-24",
+      "verification": "Local only (darwin): gofmt clean; go build ./... + go vet + go test PASS; linux/arm GOARM=7 cross-compile OK (8.8 MB unstripped under local go1.27 — T16 rebuilds with Go ≤1.23 + -trimpath -ldflags=-s); dev-stub smoke: DASH_FB override → valid P5 PGM, pixel-checked. UNVERIFIED on device (T17): eips exec rc, diag.log contents, user display check (visible / t180 orientation / flicker)."
     },
     {
       "id": "T15",

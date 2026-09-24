@@ -3,104 +3,65 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
-	"regexp"
-	"strconv"
-	"syscall"
+	"os/exec"
+	"time"
 )
 
-const defaultFB = "/dev/fb0"
+const diagLog = "/mnt/us/diag.log"
 
-// Verified Kindle Voyage e-paper geometry (from the /dev/fb0 readout eips used):
-// portrait 1072 x 1448, 8bpp, 1088-byte rows.
-const (
-	fbW  = 1072
-	fbH  = 1448
-	fbLL = 1088 // bytes per row
-)
+// eips is the Voyage's EPDC display tool — the ONLY path that triggers
+// a visible screen refresh (the "wave"). A plain /dev/fb0 mmap write is
+// NOT visible (docs/03, ISSUES I10), so display() execs eips instead of
+// writing the framebuffer. Its input must be a single-IDAT 8-bit
+// grayscale PNG (saveKindlePNG, convert.go), 1072×1448 (or 1448×1072).
+const eipsPath = "/usr/sbin/eips"
 
-var sizeRe = regexp.MustCompile(`size=0x([0-9a-fA-F]+)`)
+// eipsTimeout bounds one eips run so a wedged EPDC can't hang the 24/7
+// refresh loop (a full FLASH is ~3 s, ISSUES I10; docs/03: 30 s).
+const eipsTimeout = 30 * time.Second
 
-// smemLenFromProc parses /proc/fb/<n> and returns the frame buffer length.
-func smemLenFromProc(n int) (uint64, bool) {
-	data, err := os.ReadFile(fmt.Sprintf("/proc/fb/%d", n))
+// display triggers the visible EPDC refresh for the given PNG:
+//
+//	eips -g <file> -x 0 -y 0
+//
+// (grayscale input, no offset). rc + duration are always logged to
+// diag.log — readable later via MRPI .log even when the screen state
+// is not (I02).
+func display(in string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), eipsTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, eipsPath, "-g", in, "-x", "0", "-y", "0")
+	t0 := time.Now()
+	err := cmd.Run()
+	dur := time.Since(t0)
 	if err != nil {
-		return 0, false
+		var ee *exec.ExitError
+		rc := -1
+		if errors.As(err, &ee) {
+			rc = ee.ExitCode()
+		}
+		diagf("eips rc=%d (%v): %v", rc, dur, err)
+		return fmt.Errorf("eips: %w", err)
 	}
-	m := sizeRe.FindSubmatch(data)
-	if m == nil {
-		return 0, false
-	}
-	v, err := strconv.ParseUint(string(m[1]), 16, 64)
-	if err != nil || v == 0 {
-		return 0, false
-	}
-	return v, true
+	diagf("eips rc=0 (%v)", dur)
+	return nil
 }
 
-func mmapFB(fd uintptr, length int) ([]byte, error) {
-	b, err := syscall.Mmap(int(fd), 0, length,
-		syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+// diagf appends a timestamped line to /mnt/us/diag.log, best effort:
+// a failed log write is dropped, never fails the render. diag.log is
+// the unattended-device log: readable from the host via MRPI
+// `;get /mnt/us/diag.log` (no terminal, I02) — so display() logs the
+// eips rc there: even if the screen state can't be observed, the
+// exit code can.
+func diagf(format string, args ...any) {
+	f, err := os.OpenFile(diagLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-// writeFB maps the framebuffer and copies an 8bpp grayscale buffer into it.
-func writeFB(fbPath string, pix []byte, w, h int) error {
-	// Resolve the source into exactly fbW x fbH (transpose if rotated).
-	src := pix
-	if w != fbW || h != fbH {
-		if w == fbH && h == fbW {
-			src = transpose(pix, w, h)
-		} else {
-			return fmt.Errorf("image %dx%d does not match fb %dx%d", w, h, fbW, fbH)
-		}
-	}
-
-	f, err := os.OpenFile(fbPath, os.O_RDWR, 0)
-	if err != nil {
-		f, err = os.OpenFile(fbPath, os.O_WRONLY, 0)
-		if err != nil {
-			return fmt.Errorf("open %s: %w", fbPath, err)
-		}
+		return
 	}
 	defer f.Close()
-
-	smem, fromProc := smemLenFromProc(0)
-	if smem == 0 {
-		smem = uint64(fbH * fbLL)
-	}
-
-	buf, merr := mmapFB(f.Fd(), int(smem))
-	if merr != nil {
-		// Retry with the exact minimum in case the reported size is off.
-		buf, merr = mmapFB(f.Fd(), fbH*fbLL)
-		if merr != nil {
-			return fmt.Errorf("mmap smem=%d (proc=%v): %v", smem, fromProc, merr)
-		}
-	}
-	defer syscall.Munmap(buf)
-
-	flipY := os.Getenv("DASH_FLIPY") != ""
-	flipX := os.Getenv("DASH_FLIPX") != ""
-	ll := fbLL
-	for y := 0; y < fbH; y++ {
-		sy := y
-		if flipY {
-			sy = fbH - 1 - y
-		}
-		dst := buf[y*ll : (y+1)*ll]
-		srow := src[sy*fbW : (sy+1)*fbW]
-		if flipX {
-			for x := 0; x < fbW; x++ {
-				dst[x] = srow[fbW-1-x]
-			}
-		} else {
-			copy(dst, srow)
-		}
-	}
-	return nil
+	fmt.Fprintf(f, "%s %s\n", time.Now().UTC().Format("2006-01-02T15:04:05Z"), fmt.Sprintf(format, args...))
 }

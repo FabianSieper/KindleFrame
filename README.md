@@ -55,5 +55,5 @@ n8n/
 ## How to continue (short version)
 
 1. Read `AGENTS.md` (mandatory), then `todos.json` → `resume` (the exact continuation point; one todo at a time, `todos.json` updated in every commit).
-2. The Go source belongs in `src/kindle-dash/` (repo-relative) — **not in the repo yet**, the user copies it in (no user-specific absolute paths in this repo — AGENTS.md path rule; the binary `artifacts/binaries/dash` is included). Implement plan steps 1–7 from `ISSUES.md` I10: `saveKindlePNG` → `dash get` writes PNG → `dash render` = `exec eips -g` → static build → deploy → user verification.
+2. The Go source **is in the repo**: `src/kindle-dash/` (repo-relative; added T11, byte-verified vs Notion Artifacts; no user-specific absolute paths — AGENTS.md path rule). Plan steps 1–3 of `ISSUES.md` I10 are implemented (T12 `saveKindlePNG` → T13 `dash get` writes single-IDAT grayscale PNG → T14 `dash render` = `exec eips -g`); remaining: T15 dev-stub cleanup → T16 static ARM build (Go ≤ 1.23) → T17 deploy + user verification.
 3. Verification ALWAYS goes through the user (the display is not visible to us): visibility, orientation (t180 reference), flicker.

@@ -15,7 +15,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFlags(0)
 	if len(os.Args) < 2 {
-		log.Fatal("usage: dash get <out.png> <url...> | dash render <in.png> [fbpath]")
+		log.Fatal("usage: dash get <out.png> <url...> | dash render <in.png>")
 	}
 	switch os.Args[1] {
 	case "get":
@@ -26,14 +26,10 @@ func main() {
 			log.Fatalf("get: %v", err)
 		}
 	case "render":
-		if len(os.Args) < 3 {
-			log.Fatal("usage: dash render <in.png> [fbpath]")
+		if len(os.Args) != 3 {
+			log.Fatal("usage: dash render <in.png>")
 		}
-		fb := defaultFB
-		if len(os.Args) > 3 {
-			fb = os.Args[3]
-		}
-		if err := render(os.Args[2], fb); err != nil {
+		if err := render(os.Args[2]); err != nil {
 			log.Fatalf("render: %v", err)
 		}
 	default:
@@ -112,9 +108,9 @@ func get(out string, urls []string) error {
 			os.Remove(tmp)
 			return err
 		}
-		if err := render(out, defaultFB); err != nil {
-			log.Printf("render after get: %v", err)
-		}
+		// No display here: get = fetch/decode/grayscale/PNG only.
+		// `dash render <out>` (eips) is the single EPDC wave per cycle
+		// (docs/03 final architecture).
 		return nil
 	}
 	return lastErr

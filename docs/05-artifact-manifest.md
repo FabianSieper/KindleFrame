@@ -6,7 +6,7 @@ Snapshot: **24.09.2026, 17:02** (kindle `card`, live card + local `kindle-eink/`
 
 | File | Size | Provenance / notes |
 |---|---|---|
-| `refresh.sh` | 2,720 B | **v4 live** (09:26Z): staging to `/tmp`, wget 300 s, Go render (mmap), render `eips` 30 s, `reboot -f` on render fail, partial refresh on file unchanged. SHA-256 `b1c06190d58e8ac7f0c28bb1a086f85f1826417c520afb1b4dcdc43b0bee2a4a` |
+| `refresh.sh` | 2,599 B (repo copy; on-card live = pre-T14 2,720 B until T17) | **v4** (live on card since 09:26Z): 10 s tick; boot = cache restore (`/mnt/us/dashboard.png` → `/tmp`) + render; render every 30 s via `dash render` (old binary: invisible mmap write); download every 300 s via `dash get` (first URL wins: live webhook → LAN n8n); hot re-stage `/mnt/us/dash` → `/tmp` on size change; wifi re-enable per tick; log → `/mnt/us/refresh.log`. SHA-256 `d8d84e9947476bfa51231f0980a987bdd3696446e305ce03d2f2ee554078508c` (pre-T14: `b1c06190…`) |
 | `refresh.sh.bak-v1` | 2,194 B | Card copy of v1 (wget render loop, ~1 min cycle) — superseded, kept for history |
 | `refresh.sh.bak-v3` | 3,393 B | v3: Mac proxy (`192.168.178.132:8080`) + `eips -g` every cycle — superseded (keeps Mac in loop), **v4 = this with the proxy replaced by Go render** |
 | `.boot` | 510 B | Active boot hook (waits for `eips`+`lipc-set-prop`, starts `refresh.sh`, logs to `/mnt/us/boot.log`) |

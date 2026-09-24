@@ -1,18 +1,15 @@
 #!/bin/sh
 # refresh.sh v4 — Kindle Voyage live dashboard via dash (static Go binary)
 # 10s tick | forced re-render every 30s | download every 300s
-# dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode, render on change
-# dash render <file>: convert cached PNG to /dev/fb0
+# dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode to
+#   single-IDAT grayscale PNG — write only, NO display
+# dash render <file>: display the PNG via eips (EPDC wave — the only visible path)
 
 URLS='https://automation.sieper.uk/webhook/last-rabbit-recognition-frame http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame'
 OUT=/tmp/dashboard.png
 CACHE=/mnt/us/dashboard.png
 PIDFILE=/tmp/refresh.pid
 LOG=/mnt/us/refresh.log
-
-# Orientation overrides (uncomment if the image lands flipped; no rebuild needed):
-# export DASH_FLIPY=1   # flip vertically (upside-down)
-# export DASH_FLIPX=1   # flip horizontally (mirrored)
 
 if [ -f "$PIDFILE" ]; then
   OLD=$(cat "$PIDFILE" 2>/dev/null)

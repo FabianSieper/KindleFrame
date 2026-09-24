@@ -112,17 +112,6 @@ func unprem(r16, a16 uint32) float64 {
 	return float64(r16) * 255.0 / float64(a16)
 }
 
-// transpose flips a w x h pixel buffer into h x w (used if fb is landscape).
-func transpose(pix []byte, w, h int) []byte {
-	out := make([]byte, w*h)
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			out[x*h+y] = pix[y*w+x]
-		}
-	}
-	return out
-}
-
 // saveKindlePNG writes 8-bit grayscale pixels (row-major, w*h bytes) as a PNG
 // the Kindle's eips accepts: IHDR color type 0 (grayscale) and exactly ONE IDAT
 // chunk, a single compress/zlib stream over all filter-0 rows. image/png cannot

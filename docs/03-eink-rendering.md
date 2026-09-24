@@ -114,24 +114,24 @@ n8n webhook (RGB ok) ──► dash GET (300 s, wget-equivalent)
 ```
 
 - **Why:** `dash` mmap (v4) is invisible; the Mac proxy (v3 era) keeps the Mac in the loop permanently; `eips` is the only visible path; grayscale + single-IDAT must therefore happen **on the device**.
-- **Status:** ✅ decided · ❌ NOT implemented (I10, steps 1–7).
+- **Status:** ✅ decided · ⏳ implemented in `src/kindle-dash/` (T12–T14: `saveKindlePNG`, `get`, `display` = eips exec, dev stub) — T16 (Go ≤1.23 static build) + T17 (deploy + user verification) remain.
 - **Side decisions:** n8n stays RGB (converted device-side); partial refresh via `-x/-y` for less flicker; download 300 s / render 30 s (as in v4).
 
 ### Implementation plan (file level, from the 24.09 session)
 
-1. `convert.go`: new `saveKindlePNG()` (spec above).
-2. `main.go`: `get()` — drop all rotation/mirror code (the image arrives pre-oriented from n8n); keep grayscale + downscale + quantize.
-3. `fb_linux.go`: `display()` → `exec /usr/sbin/eips -g <file> -x 0 -y 0` (drop the mmap path).
-4. `fb_stub.go`: PGM output (for development on the Mac).
-5. `render.go`: `convertTo8bitGray()` — the existing threshold cascade is already correct; keep.
-6. Build: `CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s"` (Go ≤ 1.23) → static binary, watch size (current 6.29 MB).
-7. Deploy (hot re-stage, no reboot needed): copy new `dash` → `/mnt/us/dash`, `pkill -f /mnt/us/dash && nohup /tmp/dash ...`, watch `/mnt/us/diag.log`.
+1. `convert.go`: new `saveKindlePNG()` (spec above). ✅ T12
+2. `main.go`: `get()` — drop all rotation/mirror code (the image arrives pre-oriented from n8n); keep grayscale + downscale + quantize. ✅ T13 — note: T13's `get()` still called `render()`; T14 removes that call, so `get` = steps 1–3 of the diagram and `render` = the single EPDC wave per cycle.
+3. `fb_linux.go`: `display()` → `exec /usr/sbin/eips -g <file> -x 0 -y 0` (drop the mmap path). ✅ T14 — rc + duration always logged to `/mnt/us/diag.log` (new); the byte-buffer `transpose` and `DASH_FLIPX/Y` go away with the mmap path.
+4. `fb_stub.go`: PGM output (for development on the Mac). ✅ T14 (`DASH_FB` override; minor cleanup = T15).
+5. `render.go`: `render()` = thin `display()` wrapper (T14); the grayscale cascade (`toGray`) is unchanged.
+6. Build: `CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s"` (Go ≤ 1.23) → static binary, watch size (current 6.29 MB). ⏳ T16
+7. Deploy (hot re-stage, no reboot needed): copy new `dash` → `/mnt/us/dash`, `pkill -f /mnt/us/dash && nohup /tmp/dash ...`, watch `/mnt/us/diag.log`. ⏳ T17
 
 ### Open risks (assess before coding)
 
 - `[open]` Does a static Go binary get permission to `exec` `eips` (AppArmor/seccomp on the ROM)? Fallback: `refresh.sh` itself calls `eips` after `dash` wrote the PNG (dash stops at "write file only").
 - `[open]` Boot shows a full refresh, the loop shows partial — acceptable flicker, but verify with the user.
-- `[recalled]` `DASH_FLIPX`/`DASH_FLIPY` env vars become obsolete with the final architecture — remove them.
+- `[done T14]` `DASH_FLIPX`/`DASH_FLIPY` env vars (and the byte-buffer `transpose`) removed with the mmap path — orientation is now n8n's job (t180 pre-rotation, `docs/04`) + eips display. If the T17 user check shows the image landed rotated, re-add the documented t180 (transpose + 180°) on the dash side.
 
 ## Open (display-side)
 
