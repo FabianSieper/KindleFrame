@@ -6,7 +6,7 @@ A 24/7 E-Ink dashboard on a jailbroken **Kindle Voyage (KV)** — driven by **n8
 
 This repository replaces the project's Notion page as the canonical documentation. A fresh AI should be able to read this repo and continue the work without any other context.
 
-## Current state (2026-09-27 — s=0.95 „perfekt“, no screensaver via ~ds; new 27.09 check: one WiFi-down wake (dl rc=1 24.09 23:43:32Z), loop frozen, external endpoint healthy)
+## Current state (2026-09-27 — s=0.95 „perfekt“, no screensaver via ~ds; 27.09 afternoon: loop ALIVE after reboot 13:37:56Z (dl every ~5 min, new frame rendered 13:43:13Z, I13); NEW BUG round 4: image reverts to „dashboard“ after a few seconds — must persist → **T24**; T23/T22 open)
 
 | Component | Status |
 |---|---|
@@ -17,10 +17,10 @@ This repository replaces the project's Notion page as the canonical documentatio
 | **Visible rendering** | ✅ **via `eips -g`** (user rounds 1–3: visible + orientation OK, s=0.95 „perfekt“ 25.09; pre-T16 the mmap writes were invisible — "nothing happens") |
 | Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T20 done (round 2, 24.09 abend); T21 done (round 3, 25.09: s=0.95 „perfekt“); T17 in progress (flicker not yet reported)** |
 | Image size on display | ✅ **T21 done (25.09):** s=0.95 (≈10 % black, thinnest visible margin) — user round 3: „das Bild ist jetzt perfekt von der Größe“; fallbacks 0.9/1.0 not needed |
-| Flicker | ⏳ not yet reported by user (T17 final acceptance) |
-| Loop / network | ⏳ frozen since 24.09 (deep sleep); only new event 23:43:32Z = WiFi down → `dl rc=1` (I12); external endpoint healthy 27.09 → loop recovers on wake; LAN fallback URL stale (T22, cosmetic) |
+| Flicker / reversion | ⏳ **answered 27.09 (round 4): NOT acceptable** — image briefly shown, then the „dashboard“ comes back after a few seconds; must persist until the next image is loaded → **T24** (T17 closes after T24 + round 5) |
+| Loop / network | ✅ **ALIVE 27.09** (reboot 13:37:56Z → boot render rc=0, eips 1.875 s; dl every ~5 min; new frame 609,945 B `444140dc…` rendered 13:43:13Z; I13); two WiFi-down wakes on record (24.09 23:43:32Z, 27.09 13:36:28Z — pattern: WiFi not up yet at wake); LAN fallback URL stale (T22, cosmetic) |
 
-**→ Next ticket:** **T17 final acceptance** (flicker — not reported in rounds 1–3; plus a wake test: short press, ~ds, ~10 min awake, then re-check `refresh.log`). Then optional: n8n grayscale (T18) blocked on T19 (API key 401); and **T22** (27.09): the stale LAN fallback URL in `refresh.sh` (Mac IP 108→132, n8n not on this Mac) — cosmetic, user decision (leave / v7 fix / drop). Keep-awake on the device = **~ds** (user-verified 25.09; a reboot cancels it — the user re-enters it). Exact resume in `todos.json`. Rules for continuing AIs: **`AGENTS.md`**.
+**→ Next ticket:** **T24** (27.09 round 4: image reverts to the „dashboard“ a few seconds after being shown — must persist until the next image is loaded; fix candidate: v7 wake-detection via clock jump + immediate cache re-render) → user round 5 → **T17 closes** (flicker answered 27.09: not acceptable). Plus **T23** (`~ds` automation at boot: no search-bar automation possible — manual re-entry vs persistent settings switch) and **T22** (stale LAN fallback URL — user decision, re-asked). Then optional: n8n grayscale (T18) blocked on T19 (API key 401). Keep-awake on the device = **~ds** (user-verified 25.09; a reboot cancels it — the user re-enters it). Exact resume in `todos.json`. Rules for continuing AIs: **`AGENTS.md`**.
 
 ## Repo structure
 

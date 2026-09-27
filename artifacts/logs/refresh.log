@@ -264,3 +264,15 @@ Thu Sep 24 22:05:51 UTC 2026 dl ok
 Thu Sep 24 22:11:12 UTC 2026 dl ok
 get: http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame: Get "http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame": dial tcp 192.168.178.108:5678: connect: network is unreachable
 Thu Sep 24 23:43:32 UTC 2026 dl rc=1
+get: http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame: Get "http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame": dial tcp 192.168.178.108:5678: connect: network is unreachable
+Sun Sep 27 13:36:28 UTC 2026 dl rc=1
+Sun Sep 27 13:37:56 UTC 2026 staged dash size 5177496
+Sun Sep 27 13:37:56 UTC 2026 v6 start pid=5652
+Sun Sep 27 13:37:57 UTC 2026 boot: restored cache
+Sun Sep 27 13:37:57 UTC 2026 boot render
+Sun Sep 27 13:37:59 UTC 2026 boot render rc=0
+Sun Sep 27 13:43:13 UTC 2026 dl ok
+Sun Sep 27 13:43:13 UTC 2026 image changed, render
+Sun Sep 27 13:43:13 UTC 2026 render rc=0
+Sun Sep 27 13:48:34 UTC 2026 dl ok
+Sun Sep 27 13:53:55 UTC 2026 dl ok

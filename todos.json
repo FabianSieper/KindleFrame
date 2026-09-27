@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-27T13:29Z",
+  "updated_at": "2026-09-27T14:20Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -10,9 +10,9 @@
     "dropped": "decided against; see reason"
   },
   "resume": {
-    "next_todo": "T17",
-    "state": "PAUSE (27.09 13:29Z). KARTA UNVERÄNDERT + ein neues Log-Event (25.09 → 27.09, User war ~2 Tage weg). Aktives Set bit-identisch zu Repo (refresh.sh v6 514a37ac… 3,913 B / dash 58f751e4… 5,177,496 B / dashboard.png ce561a6c… 463,592 B / .boot fd4501a8…); diag.log unverändert (322 ln, 119a6b99…). NEU: card refresh.log 264→266 ln (SHA 38022d4a…; Repo-Copy aktualisiert) — genau ein neues Event: 24.09 23:43:32Z dl rc=1, Error-Zeile = LAN-URL 192.168.178.108:5678 mit ENETUNREACH („network is unreachable“) → WiFi beim Wake komplett down → beide URLs fehlgeschlagen (get() loggt nur den letzten Fehler, main.go). Kein Reboot seit 21:55:14Z 24.09; danach ~2 Tage Silentium = Deep-Sleep-Freeze (Wake-Resume verifiziert 24.09). Externes Endpunkt 27.09 gesund (HTTP 200, 723,886 B, ~4,6 s) → Loop erholt sich automatisch bei Gerät-wach + WiFi-up. Mac-IP jetzt 192.168.178.132 (war 192.168.178.108, DHCP); n8n läuft auf diesem Mac nicht (5678 closed) → LAN-Fallback in refresh.sh veraltet = kosmetisch (extern primär) → T22 (User-Entscheidung: belassen / v7-Fix / entfernen). DREI offene User-Fragen: (1) Wake-Test: Kindle kurz drücken (muss wach werden + WiFi up) → ~ds neu eintippen (falls nach Reboot 24.09 nicht mehr aktiv) → ~10 min wach lassen → Agent schaut refresh.log (neue dl-Zeilen = Loop lebt, dl alle ~300 s; Render nur bei Bild-Change); (2) T17-FINALE: ist das Flackern akzeptabel? (Renders nur bei Bild-Change → statisches Feed = kein Flackern); (3) T22-Endpoint-Entscheidung. Wenn Flackern OK + Loop lebt → T17 done (user-verified) → DoD item 6 komplett → Milestone T12–T17 DONE. T18/T19 weiter blockiert (User n8n API key, 401).",
-    "how_to_resume": "User zurück (27.09). (1) DIE DREI FRAGEN stellen (Deutsch): Wake-Test (~10 min Wachzeit) + Flackern akzeptabel? + T22-Endpoint (stale LAN-Fallback: belassen / v7-Fix / entfernen). (2) Danach Karte read-only prüfen: refresh.log-Wachstum? Neue dl-Zeilen = Loop lebt (erwartet: dl alle ~300 s; Render nur bei Bild-Change). (3) Wenn Flackern OK + Loop lebt: T17 → done (user-verified); update AGENTS.md DoD item 6 + „Actual state“, ISSUES.md I10/I12, README current-state, todos.json → Milestone T12–T17 DONE. (4) T22 nach User-Entscheidung: refresh.sh v7 (nur URLS-Zeile + Marker) → announce → User-Point-Write-Autorisierung → SHA-verify. T18/T19 blockiert (API key). Display-Verifikation nur durch User."
+    "next_todo": "T24",
+    "state": "ROUND 4 (27.09 nachmittag, User-Nachricht + Karten-Check ~14:00Z; kein Deploy). Wake-Test = praktisch PASSED: refresh.log 266→278 ln (SHA 683eb9a0…): 13:36:28Z Wake (dl rc=1 ENETUNREACH — WiFi beim Wake wieder down, 2×) → User-Reboot 13:37:56Z (v6 start pid=5652) → boot render rc=0 (eips 1.875 s) → 13:43:13Z dl ok + image changed + render rc=0 (191.2 ms) → 13:48:34Z + 13:53:55Z dl ok, kein Change (Cadence ≈5:21). diag.log 322→324 ln (519b91c9…). Neues Frame 609,945 B (444140dc…; Repo-Kopien aktualisiert, bit-identisch); aktives Set unverändert. USER Round 4: (a) NEUER BUG: letztes Bild kurz angezeigt → nach ein paar Sekunden kommt „wieder das Dashboard“ — „das soll bitte nicht passieren“; Bild muss bis zum nächsten Bild geladen bleiben → Flackern/Reversion NICHT akzeptabel → T17 bleibt offen (schließt nach T24 + Round 5). (b) ~5-min-Intervall akzeptiert („für den Moment ok so“). (c) Frage ~ds-Automatisierung beim Start → T23 (ehrliche Antwort: kein Terminal/API für die Suchleiste). [assumed] Mechanismus: Kindle-UI übernimmt Panel bei Wake/Reboot; Loop rendert dazwischen nichts (change-only) → Panel auf UI bis nächster Frame-Change; Doppel-Render per Log ausgeschlossen. T22: User nicht geantwortet → erinnert. Details: ISSUES.md I13.",
+    "how_to_resume": "User zurück (27.09). (1) Antwort (dieser Turn): Wake-Test ✅ + Reversion-Bug dokumentiert (I13) + ~ds-Antwort + 3 Präzisierungsfragen: (a) was erscheint dazwischen (Kindle-Home / weißer Flash / Schwarz / gleiches Bild)? (b) nur nach Wake/Reboot oder auch steady state? (c) wurde ~ds nach dem Reboot 13:37Z neu eingegeben? + Bitte: Settings-Menü auf persistenten Screensaver-Schalter prüfen (T23) + T22-Reminder (belassen / v7-Fix / entfernen). (2) Nach User-Antwort: v7 bauen je nach Mechanismus (Kandidat: Wake-Erkennung per Uhrsprung + sofortiges Cache-Re-Render; falls T22 = v7-Fix → gleiche v7 inkl. URLS-Zeile) → announce → user-authorized Point-Write /Volumes/Kindle/refresh.sh → SHA-verify (Größen-Change löst auto Hot-Re-Stage aus, kein Reboot nötig). (3) User-Round 5: Bild bleibt nach Wake/Reboot bis zum nächsten Bild (kein UI-Return)? → ja ⇒ T24 done + T17 done (Milestone T12–T17 DONE; update AGENTS.md DoD 6 + README) + I13 Status. (4) T23 nach User-Entscheidung (Settings-Schalter gefunden? → Doku; sonst bleibt ~ds manuell). (5) T22-Entscheidung umsetzen. NIE Deploy ohne Announce + Freigabe."
   },
   "todos": [
     {
@@ -248,14 +248,15 @@
       "status": "in_progress",
       "issue": "I10-6",
       "depends_on": [
-        "T16"
+        "T16",
+        "T24"
       ],
       "refs": [
         "docs/03-eink-rendering.md (validation shell + orientation references)",
         "artifacts/images/orient-test-*.png",
         "artifacts/refresh.sh"
       ],
-      "details": "Deploy via hot re-stage (refresh.sh v4 size check) + reboot; validate_png on the produced file; user confirms: visible? orientation vs t180 reference? flicker acceptable? Then: refresh.log shows 'dl ok' + 'render rc=0'. On success: update README current-state table + docs (repo wins over Notion). Executed 24.09 13:29 UTC: point-write deploy to /Volumes/Kindle (= /mnt/us) — dash 5,177,496 B (ce74c7b4…, T16 build) + refresh.sh 2,599 B (d8d84e99…, post-T14), SHA-verified on card; device last active 06:43 UTC → pending step = user reboots the Kindle (.boot hook auto-starts refresh.sh). **Update 24.09 ~14:20 UTC:** user rebooted ~14:19Z → logs GREEN (refresh.log: staged new dash, „v4 start pid=6026“, boot render rc=0 @14:19:50Z; diag.log: eips rc=0, 3.244 s / 2.636 s / 395.8 ms @14:20:14Z → T14 exec-permission risk RESOLVED); no entries after 14:20:14Z [open — device likely sleeping after the user's check; first re-download ~300 s later never observed]. USER VERIFICATION round 1 (24.09): visible ✅, orientation ✅ (t180), size ❌ („füllt den ganzen screen aus, ist aber zu groß“ = edge-to-edge, no margin) → **T20** (DASH_SCALE letterbox); flicker UNREPORTED. Stays in_progress: final acceptance (size + flicker) after T20. Card cache dashboard.png measured 14:57Z = RGB ct 2 / 25 IDAT (doc error corrected in docs/03+05+AGENTS.md; never rendered pre-T16, eips-rendered at this boot — faithful vs crop [open]). **Round 2 (24.09 abend):** visible ✅, whole image ✅, orientation ✅ re-confirmed; **flicker still not reported** → stays open (asked again in round 3). **Round 3 (25.09):** size ✅ (s=0.95 „perfekt“, via T21); **flicker STILL not reported** (rounds 1–3) → stays in_progress (final question to the user)."
+      "details": "Deploy via hot re-stage (refresh.sh v4 size check) + reboot; validate_png on the produced file; user confirms: visible? orientation vs t180 reference? flicker acceptable? Then: refresh.log shows 'dl ok' + 'render rc=0'. On success: update README current-state table + docs (repo wins over Notion). Executed 24.09 13:29 UTC: point-write deploy to /Volumes/Kindle (= /mnt/us) — dash 5,177,496 B (ce74c7b4…, T16 build) + refresh.sh 2,599 B (d8d84e99…, post-T14), SHA-verified on card; device last active 06:43 UTC → pending step = user reboots the Kindle (.boot hook auto-starts refresh.sh). **Update 24.09 ~14:20 UTC:** user rebooted ~14:19Z → logs GREEN (refresh.log: staged new dash, „v4 start pid=6026“, boot render rc=0 @14:19:50Z; diag.log: eips rc=0, 3.244 s / 2.636 s / 395.8 ms @14:20:14Z → T14 exec-permission risk RESOLVED); no entries after 14:20:14Z [open — device likely sleeping after the user's check; first re-download ~300 s later never observed]. USER VERIFICATION round 1 (24.09): visible ✅, orientation ✅ (t180), size ❌ („füllt den ganzen screen aus, ist aber zu groß“ = edge-to-edge, no margin) → **T20** (DASH_SCALE letterbox); flicker UNREPORTED. Stays in_progress: final acceptance (size + flicker) after T20. Card cache dashboard.png measured 14:57Z = RGB ct 2 / 25 IDAT (doc error corrected in docs/03+05+AGENTS.md; never rendered pre-T16, eips-rendered at this boot — faithful vs crop [open]). **Round 2 (24.09 abend):** visible ✅, whole image ✅, orientation ✅ re-confirmed; **flicker still not reported** → stays open (asked again in round 3). **Round 3 (25.09):** size ✅ (s=0.95 „perfekt“, via T21); **flicker STILL not reported** (rounds 1–3) → stays in_progress (final question to the user). **Round 4 (27.09):** flicker question ANSWERED — NOT acceptable (concrete reversion bug, I13: last image briefly shown → „wieder das Dashboard“ after a few seconds; must persist until the next image is loaded). Mechanism [assumed]: Kindle UI reclaims the panel on wake/reboot; the loop renders nothing in between (change-only render). Closure now requires T24 fix + user round 5."
     },
     {
       "id": "T18",
@@ -325,6 +326,30 @@
         "ISSUES.md I12"
       ],
       "details": "27.09 Befund: URLS-Zeile 15 `http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame` veraltet — Mac-IP jetzt 192.168.178.132 (DHCP, en0, Gateway 192.168.178.1), n8n läuft auf diesem Mac nicht (Port 5678 closed; echtes n8n = automation.sieper.uk = extern primär). Auswirkung: kosmetisch (LAN wird nur probiert, wenn extern down; Evidence: 24.09 23:43:32Z dl rc=1 = WiFi down, beide URLs fehlgeschlagen). Optionen für User: (a) belassen + als stale dokumentieren (kein Deploy), (b) v7: IP aktualisieren ODER LAN-Eintrag entfernen (nur URLS-Zeile + Marker; Deploy = announce → user-authorized Point-Write /Volumes/Kindle/refresh.sh → SHA-verify; Trigger = Reboot), (c) Fallback auf stabilen Hostnamen (falls existiert)."
+    },
+    {
+      "id": "T23",
+      "title": "~ds / Keep-Awake beim Start automatisieren (User-Frage 27.09: „kann man das automatisch beim start machen?“)",
+      "status": "open",
+      "issue": "I13",
+      "refs": [
+        "ISSUES.md I13",
+        "ISSUES.md I11 (Wunsch 2: ~ds)",
+        "docs/02-jailbreak.md (~ds-Quellen)"
+      ],
+      "details": "User-Frage 27.09 (round 4): ~ds beim Boot automatisch? Ehrliche Antwort: **über das Suchfeld nicht möglich** — kein Terminal/API auf dem Gerät kann in die Suchleiste tippen (Repo-Regel: keine freie Shell; MRPI + /mnt/us nur). Optionen: (a) manuell nach jedem Reboot neu eintippen (aktuell; User: „das übernehme ich“); (b) **equivalenter Schalter im Settings-Menü** (Screensaver an/aus — überlebt Reboots, ohne ~ds-Nebenwirkung „Kurzdruck-Lock kaputt“; Existenz auf der Voyage in diesem Repo UNVERIFIZIERT — I11 „Wach bleiben“ (Settings → Device) = [assumed]) → User prüft das Menü; falls vorhanden → ~ds wird obsolet; (c) [open, unwahrscheinlich] Config auf der Home-Partition setzen — von der Mac-Seite nicht sichtbar (nur /mnt/us mountbar) → nicht untersuchbar ohne Terminal. User-Entscheidung: (a) vs (b)."
+    },
+    {
+      "id": "T24",
+      "title": "Bild bleibt permanent auf dem Panel (kein UI-Return nach Wake/Reboot — User round 4: „das soll bitte nicht passieren“)",
+      "status": "open",
+      "issue": "I13",
+      "refs": [
+        "ISSUES.md I13",
+        "ISSUES.md I11 (Deep Sleep → Screensaver erschien = Evidenz UI-Übernahme)",
+        "artifacts/refresh.sh (change-only-Render-Logik)"
+      ],
+      "details": "User 27.09 (round 4): nach dem kurz angezeigten letzten Bild kommt nach ein paar Sekunden „wieder das Dashboard“; das letzte Bild muss angezeigt bleiben, bis das nächste geladen wird. Logs zeigen: Loop rendert dazwischen nichts (v6: Render nur bei Bild-Change) → Reversion ist display-seitig und für das Skript unsichtbar. [assumed] Mechanismus: Kindle-UI übernimmt das Panel bei Wake/Reboot (Evidenz: I11 Deep Sleep → Screensaver); Doppel-Render beim Boot per Log ausgeschlossen. Präzisierung offen (User-Fragen gestellt): was erscheint dazwischen (Home / Flash / Schwarz / gleiches Bild)?; nur nach Wake/Reboot oder auch steady state?; ~ds nach Reboot 13:37Z neu eingegeben? Fix-Kandidaten: (1) **v7: Wake-Erkennung (Uhrsprung — sleep 10 kommt >~20 s später zurück) + sofortiges Re-Render des Caches** → UI-Fenster von „bis zum nächsten Change“ auf „ein paar Sekunden“ verkleinern; skript-seitig testbar, log-verifizierbar; (2) Keep-Awake (T23) → kein Wake → keine Übernahme (löst nur Wake/Reboot-Fall, nicht steady state); (3) eips-Wave-Typ [open]. Caveat: (1) verhindert nicht, dass die UI zwischen unseren Renders zeichnet — bleibt danach UI sichtbar → Nachschärfung nötig (mehrere Re-Renders / UI-Config). Deploy = announce + user-authorized Point-Write + SHA-verify."
     }
   ]
 }
