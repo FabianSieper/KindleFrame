@@ -276,3 +276,8 @@ Sun Sep 27 13:43:13 UTC 2026 image changed, render
 Sun Sep 27 13:43:13 UTC 2026 render rc=0
 Sun Sep 27 13:48:34 UTC 2026 dl ok
 Sun Sep 27 13:53:55 UTC 2026 dl ok
+Sun Sep 27 15:18:00 UTC 2026 staged dash size 5177496
+Sun Sep 27 15:18:00 UTC 2026 v6 start pid=5699
+Sun Sep 27 15:18:00 UTC 2026 boot: restored cache
+Sun Sep 27 15:18:00 UTC 2026 boot render
+Sun Sep 27 15:18:02 UTC 2026 boot render rc=0

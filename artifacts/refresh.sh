@@ -1,5 +1,5 @@
 #!/bin/sh
-# refresh.sh v6 — Kindle Voyage live dashboard via dash (static Go binary)
+# refresh.sh v7 — Kindle Voyage live dashboard via dash (static Go binary)
 # 10s tick | download every 300s | render ONLY on image change (cksum)
 # NOTE: ticks advance only while the device is AWAKE — in deep sleep the loop
 # freezes (resumes on wake; verified 24.09). KEEP AWAKE — user-verified on
@@ -8,11 +8,28 @@
 # -> re-enter it after every reboot. Side effect: the manual short-press
 # screen lock stops working. (No script-level keep-awake mechanism exists —
 # do not invent one.)
+# v7 (27.09 — T22 + T24):
+#  URLS: external endpoint ONLY — the LAN fallback (Mac DHCP IP) is REMOVED
+#  (user 27.09: "der Mac soll mit dem Prozess gar nichts zu tun haben").
+#  Boot window (T24): the Kindle UI paints the home screen onto the panel a
+#  few seconds after boot, overwriting our boot render (user 27.09 round 5:
+#  the image simply disappears -> home screen visible; ONLY right after a
+#  reboot — steady state is fine). Forced re-renders at +20s/+60s/+150s/
+#  +300s after the boot render land AFTER the UI settles; then the image
+#  stays until the next image is loaded.
+#  Wake re-render (T24): a wall-clock gap > 120s between two ticks = deep-
+#  sleep thaw (the thawed process sees the advanced system clock — proven in
+#  the wake log lines 24.09 23:43:32Z and 27.09 13:36:28Z). The UI redraws
+#  (home screen / screensaver) around a wake (I11) -> re-render now + once
+#  after 20s so at least one render lands AFTER the UI paint. (Normal
+#  worst-case tick = 45s download timeout [main.go] + 10s sleep < 120s.)
+#  NOTE: a same-SIZE binary replacement is not detected (see restage below);
+#  every refresh.sh deploy includes a reboot anyway.
 # dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode to
 #   single-IDAT grayscale PNG — write only, NO display
 # dash render <file>: display the PNG via eips (EPDC wave — the only visible path)
 
-URLS='https://automation.sieper.uk/webhook/last-rabbit-recognition-frame http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame'
+URLS='https://automation.sieper.uk/webhook/last-rabbit-recognition-frame'
 OUT=/tmp/dashboard.png
 CACHE=/mnt/us/dashboard.png
 PIDFILE=/tmp/refresh.pid
@@ -83,7 +100,8 @@ if [ ! -x "$DASH" ]; then
   log "FATAL: dash binary missing"
   exit 1
 fi
-log "v6 start pid=$$"
+log "v7 start pid=$$"
+log "clock check $(date +%s)"
 
 if [ ! -s "$OUT" ] && [ -s "$CACHE" ]; then
   cp -f "$CACHE" "$OUT"
@@ -103,11 +121,62 @@ fi
 
 lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null
 
+# --- v7: wake detection + boot window (see header) ---
+NOW0=$(date +%s 2>/dev/null)
+BOOT_TS=$NOW0
+LAST_TS=$NOW0
+WAKE_GAP=120
+BURST_DONE=
+
 tick=0
 while true; do
   lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null
   tick=$((tick + 1))
   restage
+
+  NOW=$(date +%s 2>/dev/null)
+  case "$NOW" in
+    ''|*[!0-9]*)
+      # date lacks %s support — wake/boot-window timing unavailable;
+      # degrade gracefully (main loop + change-only render keep working)
+      LAST_TS=
+      ;;
+    *)
+      if [ -n "$LAST_TS" ]; then
+        GAP=$((NOW - LAST_TS))
+        if [ "$GAP" -gt "$WAKE_GAP" ]; then
+          log "wake detected (gap ${GAP}s), re-render"
+          render
+          RC=$?
+          log "wake render rc=$RC"
+          [ "$RC" -eq 0 ] && RENDERED=$(cksum "$OUT" 2>/dev/null)
+          sleep 20
+          render
+          RC=$?
+          log "wake render 2 rc=$RC"
+          [ "$RC" -eq 0 ] && RENDERED=$(cksum "$OUT" 2>/dev/null)
+        fi
+      fi
+      LAST_TS=$NOW
+
+      AGE=$((NOW - BOOT_TS))
+      for B in 20 60 150 300; do
+        case " $BURST_DONE " in
+          *" $B "*) ;;
+          *)
+            if [ "$AGE" -ge "$B" ]; then
+              BURST_DONE="$BURST_DONE $B"
+              log "boot window re-render @${B}s"
+              render
+              RC=$?
+              log "boot window render rc=$RC"
+              [ "$RC" -eq 0 ] && RENDERED=$(cksum "$OUT" 2>/dev/null)
+            fi
+            ;;
+        esac
+      done
+      ;;
+  esac
 
   if [ $((tick % 30)) -eq 0 ]; then
     do_download
