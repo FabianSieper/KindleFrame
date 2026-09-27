@@ -16,7 +16,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFlags(0)
 	if len(os.Args) < 2 {
-		log.Fatal("usage: dash get <out.png> <url...> | dash render <in.png>")
+		log.Fatal("usage: dash get <out.png> <url...> | dash render <in.png> | dash fbdump <out.raw>")
 	}
 	switch os.Args[1] {
 	case "get":
@@ -32,6 +32,13 @@ func main() {
 		}
 		if err := render(os.Args[2]); err != nil {
 			log.Fatalf("render: %v", err)
+		}
+	case "fbdump":
+		if len(os.Args) != 3 {
+			log.Fatal("usage: dash fbdump <out.raw>")
+		}
+		if err := fbdump(os.Args[2]); err != nil {
+			log.Fatalf("fbdump: %v", err)
 		}
 	default:
 		log.Fatalf("unknown command %q", os.Args[1])

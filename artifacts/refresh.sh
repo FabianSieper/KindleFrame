@@ -1,5 +1,5 @@
 #!/bin/sh
-# refresh.sh v7 — Kindle Voyage live dashboard via dash (static Go binary)
+# refresh.sh v8 — Kindle Voyage live dashboard via dash (static Go binary)
 # 10s tick | download every 300s | render ONLY on image change (cksum)
 # NOTE: ticks advance only while the device is AWAKE — in deep sleep the loop
 # freezes (resumes on wake; verified 24.09). KEEP AWAKE — user-verified on
@@ -25,6 +25,20 @@
 #  worst-case tick = 45s download timeout [main.go] + 10s sleep < 120s.)
 #  NOTE: a same-SIZE binary replacement is not detected (see restage below);
 #  every refresh.sh deploy includes a reboot anyway.
+# v8 (27.09 — T25, ISSUES I14): fb snapshot diff — LOG-ONLY PoC
+#  An accidental button press (the Voyage has no touchscreen) makes
+#  the Kindle UI paint the home screen over our image; since the loop
+#  renders only on content change, the overpaint persists. v8 detects
+#  it: after EVERY successful render, snapshot the raw panel buffer
+#  (dash fbdump -> $FB_BASE in /tmp, tmpfs — no SD wear); every 10s
+#  tick, re-dump + byte-compare (cmp -s) against that baseline.
+#  MATCH = the image holds; CHANGED = something painted over it
+#  (logged every tick + archived to $FB_DIR on SD ONCE per transition,
+#  rotated to FB_KEEP files of ~3.1 MB — the only pull path for pixel
+#  data: /tmp is tmpfs and is invisible via USB). v8 NEVER re-renders
+#  (zero flicker risk); v9 will re-render on CHANGED (rate-limited:
+#  >=60s between restores, <=3/h, 10s check cadence -> latency ~10-20s).
+
 # dash get <out> <urls...>: fetch (first URL wins), verify PNG, decode to
 #   single-IDAT grayscale PNG — write only, NO display
 # dash render <file>: display the PNG via eips (EPDC wave — the only visible path)
@@ -36,6 +50,16 @@ PIDFILE=/tmp/refresh.pid
 LOG=/mnt/us/refresh.log
 # T20: downscale + black letterbox (0..1; 1.0 = full size, no margin; T21: 0.95)
 export DASH_SCALE=0.95
+# T25 (v8): fb snapshot diff (see the v8 header block above).
+# FB_BASE = raw panel buffer dump right after our last successful
+# render (the baseline); every tick re-dumps to FB_CUR and compares.
+# FB_STATE = match|chg — archive only on the match->chg transition
+# (a persistent overpaint must not rewrite 3.1 MB to SD every 10s).
+FB_BASE=/tmp/kf_fb_base.raw
+FB_CUR=/tmp/kf_fb_cur.raw
+FB_DIR=/mnt/us/kf_fb
+FB_KEEP=8
+FB_STATE=
 
 if [ -f "$PIDFILE" ]; then
   OLD=$(cat "$PIDFILE" 2>/dev/null)
@@ -82,6 +106,69 @@ png_valid() {
 
 render() {
   "$DASH" render "$OUT" >> "$LOG" 2>&1
+  # T25 (v8): after a successful render, snapshot the raw panel
+  # buffer (the overpaint-diff baseline). fb_snap always returns 0,
+  # so the rc a caller sees is unchanged; a failed render still
+  # propagates its rc.
+  [ $? -eq 0 ] && fb_snap
+}
+# T25 (v8): bounded SD archive of fb dumps (rotated to FB_KEEP
+# files, ~3.1 MB each — ~25 MB total on SD). /tmp is tmpfs
+# (invisible via USB) — this is the only pull path for pixel data.
+# Best effort: always returns 0 (never fails the caller).
+fb_archive() {
+  mkdir -p "$FB_DIR" 2>/dev/null
+  TS=$(date +%s 2>/dev/null)
+  case "$TS" in ''|*[!0-9]*) TS=0 ;; esac
+  F="$FB_DIR/$2_$TS.raw"
+  if cp -f "$1" "$F" 2>/dev/null; then
+    ls -1t "$FB_DIR"/*.raw 2>/dev/null | tail -n +$((FB_KEEP + 1)) | while IFS= read -r OLD; do
+      rm -f "$OLD" 2>/dev/null
+    done
+    SZ=$(wc -c < "$F" 2>/dev/null | tr -d ' ')
+    if command -v sha256sum >/dev/null 2>&1; then
+      log "fb archive $F $SZ bytes sha256=$(sha256sum "$F" 2>/dev/null | cut -c1-12)"
+    else
+      log "fb archive $F $SZ bytes (no sha256sum)"
+    fi
+  fi
+  return 0
+}
+
+# T25 (v8): snapshot the raw panel buffer into FB_BASE (the
+# baseline) — called from render() after eips rc=0. Best effort:
+# always returns 0. (Boot-window race: the UI could paint between
+# the eips return and our dump; rare, accepted for the PoC — a v9
+# restore re-render heals the steady state.)
+fb_snap() {
+  "$DASH" fbdump "$FB_BASE" >> "$LOG" 2>&1 || return 0
+  fb_archive "$FB_BASE" base
+  FB_STATE=match
+  return 0
+}
+
+# T25 (v8): every 10s tick — re-dump the panel buffer into FB_CUR
+# and byte-compare it with the post-render baseline. LOG-ONLY in
+# v8: a CHANGED is logged + archived, nothing is re-rendered (v9
+# acts on it, rate-limited). The baseline is NOT rotated on
+# CHANGED on purpose — it keeps naming "our last rendered state"
+# until the next render resets it (a persistent overpaint must
+# keep reading CHANGED). Always returns 0.
+fb_check() {
+  command -v cmp >/dev/null 2>&1 || return 0
+  "$DASH" fbdump "$FB_CUR" >> "$LOG" 2>&1 || return 0
+  [ -s "$FB_BASE" ] || return 0
+  [ -s "$FB_CUR" ] || return 0
+  if cmp -s "$FB_BASE" "$FB_CUR" 2>/dev/null; then
+    log "fb check MATCH"
+    FB_STATE=match
+  else
+    log "fb check CHANGED (v8 log-only)"
+    [ "$FB_STATE" != chg ] && fb_archive "$FB_CUR" chg
+    FB_STATE=chg
+  fi
+  rm -f "$FB_CUR" 2>/dev/null
+  return 0
 }
 
 do_download() {
@@ -100,7 +187,7 @@ if [ ! -x "$DASH" ]; then
   log "FATAL: dash binary missing"
   exit 1
 fi
-log "v7 start pid=$$"
+log "v8 start pid=$$"
 log "clock check $(date +%s)"
 
 if [ ! -s "$OUT" ] && [ -s "$CACHE" ]; then
@@ -194,5 +281,10 @@ while true; do
     fi
   fi
 
+  # T25 (v8): overpaint check (log-only — see the v8 header
+  # block). Runs every tick, so a CHANGED shows up in the log
+  # within ~10s; v9 will act on the same cadence (rate-limited
+  # re-render).
+  fb_check
   sleep 10
 done
