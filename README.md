@@ -6,7 +6,7 @@ A 24/7 E-Ink dashboard on a jailbroken **Kindle Voyage (KV)** — driven by **n8
 
 This repository replaces the project's Notion page as the canonical documentation. A fresh AI should be able to read this repo and continue the work without any other context.
 
-## Current state (2026-09-25 — final state: s=0.95 „perfekt“, no screensaver via ~ds)
+## Current state (2026-09-27 — s=0.95 „perfekt“, no screensaver via ~ds; new 27.09 check: one WiFi-down wake (dl rc=1 24.09 23:43:32Z), loop frozen, external endpoint healthy)
 
 | Component | Status |
 |---|---|
@@ -18,8 +18,9 @@ This repository replaces the project's Notion page as the canonical documentatio
 | Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T20 done (round 2, 24.09 abend); T21 done (round 3, 25.09: s=0.95 „perfekt“); T17 in progress (flicker not yet reported)** |
 | Image size on display | ✅ **T21 done (25.09):** s=0.95 (≈10 % black, thinnest visible margin) — user round 3: „das Bild ist jetzt perfekt von der Größe“; fallbacks 0.9/1.0 not needed |
 | Flicker | ⏳ not yet reported by user (T17 final acceptance) |
+| Loop / network | ⏳ frozen since 24.09 (deep sleep); only new event 23:43:32Z = WiFi down → `dl rc=1` (I12); external endpoint healthy 27.09 → loop recovers on wake; LAN fallback URL stale (T22, cosmetic) |
 
-**→ Next ticket:** **T17 final acceptance** (flicker — not reported in rounds 1–3; one question to the user). Then: optional n8n grayscale (T18) blocked on T19 (API key 401). Keep-awake on the device = **~ds** (user-verified 25.09; a reboot cancels it — the user re-enters it). Exact resume in `todos.json`. Rules for continuing AIs: **`AGENTS.md`**.
+**→ Next ticket:** **T17 final acceptance** (flicker — not reported in rounds 1–3; plus a wake test: short press, ~ds, ~10 min awake, then re-check `refresh.log`). Then optional: n8n grayscale (T18) blocked on T19 (API key 401); and **T22** (27.09): the stale LAN fallback URL in `refresh.sh` (Mac IP 108→132, n8n not on this Mac) — cosmetic, user decision (leave / v7 fix / drop). Keep-awake on the device = **~ds** (user-verified 25.09; a reboot cancels it — the user re-enters it). Exact resume in `todos.json`. Rules for continuing AIs: **`AGENTS.md`**.
 
 ## Repo structure
 

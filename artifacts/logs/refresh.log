@@ -262,3 +262,5 @@ Thu Sep 24 22:00:29 UTC 2026 image changed, render
 Thu Sep 24 22:00:29 UTC 2026 render rc=0
 Thu Sep 24 22:05:51 UTC 2026 dl ok
 Thu Sep 24 22:11:12 UTC 2026 dl ok
+get: http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame: Get "http://192.168.178.108:5678/webhook/last-rabbit-recognition-frame": dial tcp 192.168.178.108:5678: connect: network is unreachable
+Thu Sep 24 23:43:32 UTC 2026 dl rc=1
