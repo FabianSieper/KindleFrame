@@ -59,7 +59,7 @@ Display geometry: 758×1024 (portrait) / 1024×758 (landscape)
 | `-k` | Working-buffer dump to /tmp (diagnostics, see above) |
 | `-i` | Prints device/framebuffer info (calibration basis) |
 
-**EPDC rule:** `eips` triggers a visible EPDC refresh wave. A pure framebuffer write (mmap, `dash` v4) **triggers no wave** → invisible. `[verified]` (24.09, user: "nothing happens", logs show clean cycles). → **`eips` is the only proven visible path.**
+**EPDC rule:** `eips` triggers a visible EPDC refresh wave. A pure framebuffer write (mmap, `dash` v4) **triggers no wave** → invisible. `[verified]` (24.09, user: "nothing happens", logs show clean cycles). → **`eips` is the only proven visible path.** Conversely, a plain framebuffer **read** (`dash fbdump`, T25: 3,104,512 B raw `/dev/fb0`) triggers no wave, changes nothing, and is invisible — `[verified]` on device 28.09 (101 reads, ~24.5 ms each, zero side effects; I14/T25 PoC).
 
 ## Reference implementation `saveKindlePNG` (Python, as specification)
 

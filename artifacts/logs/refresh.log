@@ -456,3 +456,124 @@ Mon Sep 28 06:28:56 UTC 2026 render rc=0
 Mon Sep 28 06:34:16 UTC 2026 dl ok
 Mon Sep 28 06:34:16 UTC 2026 image changed, render
 Mon Sep 28 06:34:16 UTC 2026 render rc=0
+Mon Sep 28 07:57:06 UTC 2026 staged dash size 5243032
+Mon Sep 28 07:57:06 UTC 2026 v8 start pid=5927
+Mon Sep 28 07:57:07 UTC 2026 clock check 1790582226
+Mon Sep 28 07:57:07 UTC 2026 boot: restored cache
+Mon Sep 28 07:57:07 UTC 2026 boot render
+Mon Sep 28 07:57:11 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582229.raw 3104512 bytes sha256=a2e30ea39240
+Mon Sep 28 07:57:11 UTC 2026 boot render rc=0
+Mon Sep 28 07:57:15 UTC 2026 fb check MATCH
+Mon Sep 28 07:57:26 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:57:27 UTC 2026 fb archive /mnt/us/kf_fb/chg_1790582246.raw 3104512 bytes sha256=e7c6a84faf53
+Mon Sep 28 07:57:37 UTC 2026 boot window re-render @20s
+Mon Sep 28 07:57:38 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582258.raw 3104512 bytes sha256=a2e30ea39240
+Mon Sep 28 07:57:38 UTC 2026 boot window render rc=0
+Mon Sep 28 07:57:38 UTC 2026 fb check MATCH
+Mon Sep 28 07:57:49 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:57:49 UTC 2026 fb archive /mnt/us/kf_fb/chg_1790582269.raw 3104512 bytes sha256=ce9191672782
+Mon Sep 28 07:58:00 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:58:10 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:58:21 UTC 2026 boot window re-render @60s
+Mon Sep 28 07:58:21 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582301.raw 3104512 bytes sha256=a2e30ea39240
+Mon Sep 28 07:58:21 UTC 2026 boot window render rc=0
+Mon Sep 28 07:58:22 UTC 2026 fb check MATCH
+Mon Sep 28 07:58:32 UTC 2026 fb check MATCH
+Mon Sep 28 07:58:43 UTC 2026 fb check MATCH
+Mon Sep 28 07:58:53 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:58:54 UTC 2026 fb archive /mnt/us/kf_fb/chg_1790582333.raw 3104512 bytes sha256=4b200b88ae09
+Mon Sep 28 07:59:05 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:59:15 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:59:26 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:59:36 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 07:59:47 UTC 2026 boot window re-render @150s
+Mon Sep 28 07:59:47 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582387.raw 3104512 bytes sha256=a2e30ea39240
+Mon Sep 28 07:59:47 UTC 2026 boot window render rc=0
+Mon Sep 28 07:59:48 UTC 2026 fb check MATCH
+Mon Sep 28 07:59:58 UTC 2026 fb check MATCH
+Mon Sep 28 08:00:09 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:00:09 UTC 2026 fb archive /mnt/us/kf_fb/chg_1790582409.raw 3104512 bytes sha256=d5a1509888bc
+Mon Sep 28 08:00:20 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:00:30 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:00:41 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:00:51 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:02 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:12 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:23 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:34 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:44 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:01:55 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:02:05 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:02:16 UTC 2026 boot window re-render @300s
+Mon Sep 28 08:02:16 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582536.raw 3104512 bytes sha256=a2e30ea39240
+Mon Sep 28 08:02:16 UTC 2026 boot window render rc=0
+Mon Sep 28 08:02:17 UTC 2026 fb check MATCH
+Mon Sep 28 08:02:33 UTC 2026 dl ok
+Mon Sep 28 08:02:33 UTC 2026 image changed, render
+Mon Sep 28 08:02:34 UTC 2026 fb archive /mnt/us/kf_fb/base_1790582553.raw 3104512 bytes sha256=c0677f51d11f
+Mon Sep 28 08:02:34 UTC 2026 render rc=0
+Mon Sep 28 08:02:34 UTC 2026 fb check MATCH
+Mon Sep 28 08:02:44 UTC 2026 fb check MATCH
+Mon Sep 28 08:02:55 UTC 2026 fb check MATCH
+Mon Sep 28 08:03:06 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:03:06 UTC 2026 fb archive /mnt/us/kf_fb/chg_1790582586.raw 3104512 bytes sha256=d13ac7b2cfb5
+Mon Sep 28 08:03:17 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:03:27 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:03:38 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:03:48 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:03:59 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:04:09 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:04:20 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:04:31 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:04:41 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:04:52 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:02 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:13 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:23 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:34 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:44 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:05:55 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:05 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:16 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:27 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:37 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:48 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:06:58 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:07:09 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:07:19 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:07:30 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:07:40 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:07:57 UTC 2026 dl ok
+Mon Sep 28 08:07:57 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:08:07 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:08:18 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:08:28 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:08:39 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:08:50 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:00 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:11 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:21 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:32 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:42 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:09:53 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:03 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:14 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:24 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:35 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:45 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:10:56 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:07 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:17 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:28 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:38 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:49 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:11:59 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:12:10 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:12:20 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:12:31 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:12:41 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:12:52 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:13:03 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:13:20 UTC 2026 dl ok
+Mon Sep 28 08:13:20 UTC 2026 fb check CHANGED (v8 log-only)
+Mon Sep 28 08:13:30 UTC 2026 fb check CHANGED (v8 log-only)

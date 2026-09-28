@@ -6,13 +6,13 @@ A 24/7 E-Ink dashboard on a jailbroken **Kindle Voyage (KV)** — driven by **n8
 
 This repository replaces the project's Notion page as the canonical documentation. A fresh AI should be able to read this repo and continue the work without any other context.
 
-## Current state (28.09 07:00Z — **v8 PoC on card since 27.09 22:35Z** (SHA-verified, card == repo); running loop still v6 in memory — **no reboot yet**; overnight v6 fully healthy: 81 dl ok + 27 renders rc=0, zero failures, silent since 06:34:16Z = asleep; T25 phase 1 done, **awaits user reboot + `~ds` → Round 6 (T17/T22/T24) + PoC data → v9 go/no-go**; T21 done; T18/T19 blocked on n8n API key
+## Current state (28.09 14:18Z — **Reboot 07:57:06Z → v8 läuft (pid 5927); PoC vollständig (alle Exit-Kriterien erfüllt)**: 4 Boot-Fenster-Renders rc=0+MATCH, steady MATCH 08:02:17–55, Tap 08:03:06 → Browse bis 08:13:30 → asleep, fbdump 101× ~24,5 ms, 3 dl ok, zero failures; **User 28.09: 30-s-Verhalten „passt noch nicht“ = erwartet (Karte = v8 log-only)**; **v9 BUILT + FINAL (artifacts/refresh_v9.sh; 30-s-Restore, Sandbox 29/29) — awaits user-authorized point-write + reboot + 30-s test + Round 6**; logs + frame auf Mac gesynct; T21 done; T18/T19 blocked on n8n API key
 
 | Component | Status |
 |---|---|
 | WatchThis jailbreak (Legacy, 21.09.2026) | ✅ `docs/02-jailbreak.md` |
 | n8n webhook → PNG 1072×1448 | ✅ `docs/04-n8n-integration.md` |
-| On-device daemon `refresh.sh` (**card: v8 since 27.09 22:35Z** — running loop still v6 in memory until reboot; v8 = v7 (extern-only URLs T22, boot-window re-renders @+20/60/150/300 s, wake double-render, clock check) + T25 fb-snapshot-Diff **LOG-ONLY PoC** (snapshot after every render + 10-s tick cmp, MATCH/CHANGED logged, no re-render); 10 s tick, 300 s download, render only on image change, DASH_SCALE=0.95) | ✅ `artifacts/` |
+| On-device daemon `refresh.sh` (**card: v8 since 27.09 22:35Z** — running loop = **v8 since 28.09 07:57Z Reboot** (PoC läuft; Auto-Restore kommt mit v9, wartet auf Deploy); v8 = v7 (extern-only URLs T22, boot-window re-renders @+20/60/150/300 s, wake double-render, clock check) + T25 fb-snapshot-Diff **LOG-ONLY PoC** (snapshot after every render + 10-s tick cmp, MATCH/CHANGED logged, no re-render); 10 s tick, 300 s download, render only on image change, DASH_SCALE=0.95) | ✅ `artifacts/` |
 | `dash` (static Go binary, Go 1.23.12, DASH_SCALE letterbox seit T20): fetch + decode + grayscale + `eips -g` render + `fbdump` (T25) | ✅ auf Karte: **fbdump-Build (5,243,032 B, `b0736ae4…`) seit 27.09 22:35Z**; vorher T20-Build (5,177,496 B, `58f751e4…`) seit 24.09 ~20:20Z |
 | **Visible rendering** | ✅ **via `eips -g`** (user rounds 1–3: visible + orientation OK, s=0.95 „perfekt“ 25.09; pre-T16 the mmap writes were invisible — "nothing happens") |
 | Final architecture: `dash` writes single-IDAT grayscale PNG + `eips -g` displays it | ✅ **implemented (T12–T16) + deployed; T20 done (round 2, 24.09 abend); T21 done (round 3, 25.09: s=0.95 „perfekt“); T17 in progress (round 4: reversion bug → T24; round 5: precision — only right after reboot)** |

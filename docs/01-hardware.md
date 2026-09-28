@@ -31,6 +31,7 @@ Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped 
 - **Proof/debugging** therefore runs via: logs on `/mnt/us/*.log` (readable from the Mac) + test scripts that run on the next reboot.
 - **No `curl`, no `python`, no `perl`, no `bash`** — only `wget` (BusyBox, WPA2-capable, ~10 s) + POSIX `sh` + coreutils (`grep`/`sed`/`awk`).
 - E-Ink **stays bistable** — a dead `refresh.sh` simply leaves the last image on screen.
+- **Input (Button/„Touch“):** the user describes interacting as „klickt auf den bildschirm“ [user-stated 27.09]; the Voyage panel is **not touch-capable** (hardware), so input events come from the physical buttons (mechanism `[open/assumed]`, wording to be confirmed with the user — we do NOT claim a touchscreen). Functionally: any input lets the Kindle UI repaint the panel over our image (I14/T25); the fb-diff design is input-method-agnostic.
 
 ## Network
 
