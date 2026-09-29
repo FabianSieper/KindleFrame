@@ -1,7 +1,7 @@
 {
   "_doc": "GROUND TRUTH for agent work in this repo. Machine-first: written to be read and updated by AI agents. Human-readable detail lives in docs/, ISSUES.md and artifacts/ and is only referenced here (refs/issue), never duplicated. Rules for using this file: AGENTS.md §TODO workflow.",
   "version": 1,
-  "updated_at": "2026-09-29T07:48:48Z",
+  "updated_at": "2026-09-29T12:55:37Z",
   "status_legend": {
     "open": "not started",
     "in_progress": "started, not finished",
@@ -11,9 +11,9 @@
   },
   "resume": {
     "next_todo": "T25",
-    "state": "29.09 11:58Z (V9 KARTEN-DEPLOYED, user-authorized; danach wartet auf Reboot): User-Autorisierung 29.09 verbatim „ja, schreib ich reboote danach“. Deploy (Point-Write, gemeldet + authorisiert; einzige Karten-Operation): /Volumes/Kindle/refresh.sh: v8 (10,333 B, 1331167f…8ecae1) -> refresh.sh.bak (Rollback erhalten, SHA-verify), dann v9 (14,363 B, SHA 95216d035b0c50baa5bc96646db2dbe5a6ed0094e8acebaa16965b61af759804, mode rwx------). Verify: repo artifacts/refresh_v9.sh = 374 ln + sh -n OK + sha256 identisch; cmp repo<->card OK; Double-Read (5/8 s Abstand) SHA-identisch; diskutil im Sandbox-Kontext NICHT verfügbar (DiskManagement framework unavailable) -> Remount-Schritt ersetzt durch Double-Read; endgueltiger Proof = v9-Start-Zeile im Reboot-Log („v9 start pid=…“). dash 5,243,032 B b0736ae4… + .boot fd4501a8… UNVERAENDERT; kf_fb/ nicht angefasst. Repo-Sync: artifacts/refresh.sh = v9 (Mirror der Karte). Laeufer-Loop (pid 5927) im Speicher weiter v8 -> v9 aktiv ab naechstem Reboot. Geraet frozen/asleep seit 28.09 22:35:43Z. NEXT = CRITICAL PATH (user-gated): (1) **USER-REBOOT** (+ ~ds neu eingeben, T23); (2) **30-s-Test**: Button druecken -> ~30-40 s warten -> letztes Bild muss zurueckkommen (v9: „restore: overpaint stable Ns -> re-render“, Latenz <=~40 s, Cooldown 60 s, <=3/h; Fallback AUTO_RESTORE=0 + Redeploy); (3) **Round 6 explizite Bestaetigung** (Boot-Bild haelt? Frame sichtbar? flicker ok? — Wake-Kriterium I15-umformuliert: Evidenz = Boot-Fenster-Renders + steady MATCH + dl ok + clock check). Danach: Log-Pull + Auswertung (restore-Zeilen + rc, Latenz, erste Wake-Linie = I15-Nachweis) -> T25 done (+ T24/T22 -> T17). Gate B agent-ready (wartet auf Logs).",
+    "state": "29.09 11:58Z (V9 KARTEN-DEPLOYED, user-authorized; danach wartet auf Reboot): User-Autorisierung 29.09 verbatim „ja, schreib ich reboote danach“. Deploy (Point-Write, gemeldet + authorisiert; einzige Karten-Operation): /Volumes/Kindle/refresh.sh: v8 (10,333 B, 1331167f…8ecae1) -> refresh.sh.bak (Rollback erhalten, SHA-verify), dann v9 (14,363 B, SHA 95216d035b0c50baa5bc96646db2dbe5a6ed0094e8acebaa16965b61af759804, mode rwx------). Verify: repo artifacts/refresh_v9.sh = 374 ln + sh -n OK + sha256 identisch; cmp repo<->card OK; Double-Read (5/8 s Abstand) SHA-identisch; diskutil im Sandbox-Kontext NICHT verfügbar (DiskManagement framework unavailable) -> Remount-Schritt ersetzt durch Double-Read; endgueltiger Proof = v9-Start-Zeile im Reboot-Log („v9 start pid=…“). dash 5,243,032 B b0736ae4… + .boot fd4501a8… UNVERAENDERT; kf_fb/ nicht angefasst. Repo-Sync: artifacts/refresh.sh = v9 (Mirror der Karte). Laeufer-Loop (pid 5927) im Speicher weiter v8 -> v9 aktiv ab naechstem Reboot. Geraet frozen/asleep seit 28.09 22:35:43Z. NEXT = CRITICAL PATH (user-gated): (1) USER-REBOOT LAEUFT (User-Report 29.09 ~12:5Z; Log-Nachweis „v9 start pid=…“ ausstehend; danach ~ds neu eingeben, T23); (2) **30-s-Test**: Button druecken -> ~30-40 s warten -> letztes Bild muss zurueckkommen (v9: „restore: overpaint stable Ns -> re-render“, Latenz <=~40 s, Cooldown 60 s, <=3/h; Fallback AUTO_RESTORE=0 + Redeploy); (3) **Round 6 explizite Bestaetigung** (Boot-Bild haelt? Frame sichtbar? flicker ok? — Wake-Kriterium I15-umformuliert: Evidenz = Boot-Fenster-Renders + steady MATCH + dl ok + clock check). Danach: Log-Pull + Auswertung (restore-Zeilen + rc, Latenz, erste Wake-Linie = I15-Nachweis) -> T25 done (+ T24/T22 -> T17). Gate B agent-ready (wartet auf Logs). NEU NOTIERT (29.09): T26 Repo-Konsolidierung (Aufbau-Historie entfernen → reines Setup-Repo; Artefakte 1:1 im Repo; Probleme bleiben; ohne Secrets; Ziel: frischer Agent stellt den Endzustand ALLEINE aus dem Repo her) — nach Milestone, NUR NOTIERT, noch nicht umsetzen.",
     "last_verified": "2026-09-29T11:58Z (Karte geschrieben: refresh.sh v9 14,363 B 95216d03…f59804 (rwx------, cmp + Double-Read verifiziert), refresh.sh.bak = v8 10,333 B 1331167f…8ecae1; dash 5,243,032 B b0736ae4… + .boot fd4501a8… unverändert; Geraet frozen/asleep seit 28.09 22:35:43Z; Laeufer-Loop (pid 5927) im Speicher weiter v8 -> v9 aktiv ab naechstem Reboot.)",
-    "updated_at": "2026-09-29T11:58:00Z"
+    "updated_at": "2026-09-29T12:55:37Z"
   },
   "todos": [
     {
@@ -376,6 +376,25 @@
       ],
       "depends_on": [
         "T24"
+      ]
+    },
+    {
+      "id": "T26",
+      "title": "Repo-Konsolidierung: Aufbau-Historie entfernen → reines Setup-/Reproduktions-Repo (Endzustand 1:1 aus dem Repo reproduzierbar; Probleme + Artefakte bleiben, ohne Secrets)",
+      "status": "open",
+      "issue": null,
+      "refs": [],
+      "block_on": null,
+      "depends_on": [
+        "T17",
+        "T18",
+        "T19",
+        "T22",
+        "T24",
+        "T25"
+      ],
+      "details": [
+        "T26 NOTIERT 29.09 (User-Request während des v9-Reboots; NUR NOTIERT — Implementierung ist eine separate Phase NACH dem Milestone, noch nicht starten). Spec (User 29.09, paraphrasiert): Wenn alle anderen Todos erledigt sind und alle Funktionen passen, das Repo umstrukturieren — die aufbauende Historie (was alles gemacht/probiert wurde, Versionen/Runden/Iterationen) ENTFERNEN. BEHALTEN: (1) was + wie alles konfiguriert werden muss, (2) welche Dateien wo liegen (1:1-Spiegel der Kindle-Karte im Repo — Pfade/Größen/SHAs; ohne Secrets/PII, Sanitizing-Regeln bleiben), (3) alles, um exakt denselben Zustand wie jetzt wiederherzustellen, (4) Problem-Informationen, über die man gestolpert ist (bleiben). Zielbild: Ein frischer Agent OHNE Chat-History kann aus dem Repo ALLEINE den identischen Endzustand herstellen (Build + Deploy + Config). Vor Umsetzen: Struktur/Plan festlegen (welche Docs rationalisieren, welche Artefakte 1:1 spiegeln, neue README/Setup-Anleitung). depends_on = alle offenen Todos."
       ]
     }
   ]
