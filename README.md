@@ -35,12 +35,13 @@ n8n-Workflow (Webhook)
 | `src/kindle-dash/` | Go-Quellcode (flat layout, Go ≤1.23) |
 | `artifacts/` | Bereit-zum-Deploy-Dateien (sanitized) |
 | `n8n/` | Sanitized n8n-Workflow-Export |
+| `n8n/code/t180-n8n.js` | Gold-Code für t180-Bildtransformation (pure-JS PNG-Pipeline; Sandbox-Test PASS, nie live deployed — 401 API-Key) |
 
 ## Status
 
-**Alle Deployment-Schritte abgeschlossen und verifiziert.** Das System läuft produktiv.
+**Version v9 deployed und produktiv.** Alle Deployment-Schritte abgeschlossen und verifiziert.
 
-Offen: T18/T19 (n8n-seitige Grayscale-Konvertierung) — blockiert auf n8n-API-Key.
+Offen: T18/T19 (n8n-seitige Grayscale-Konvertierung) — blockiert auf n8n-API-Key (401).
 
 ## Wichtige Hinweise
 

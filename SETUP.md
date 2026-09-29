@@ -85,7 +85,6 @@ Datei `artifacts/refresh.sh` — folgende Platzhalter mit eigenen Werten ersetze
 | Platzhalter | Wert |
 |---|---|
 | `REPLACE_WITH_WEBHOOK_URL` | Vollständige n8n-Webhook-URL (z. B. `https://dein-n8n.host/webhook/...`) |
-| `REPLACE_WITH_N8N_HOST` | LAN-IP des n8n-Servers (Falls LAN-Fallback gewünscht — v9 nutzt standardmäßig nur externen Endpoint) |
 
 ### 4b. Auf die Karte kopieren
 
@@ -124,12 +123,14 @@ Im Workflow folgende Werte anpassen:
 
 ### 5c. PNG-Formatierung im Workflow
 
-**Kritisch:** Das vom Webhook gelieferte PNG muss folgende Bedingungen erfüllen:
+**Hinweis:** `dash` konvertiert das vom Webhook gelieferte PNG **auf dem Device** in das korrekte Format (Grayscale, 1 IDAT). Der n8n-Workflow **darf** RGB mit mehreren IDAT-Chunks senden — die Konvertierung übernimmt `dash`.
 
-| Regel | Wert | Grund |
+**Empfehlung:** n8n sollte trotzdem folgende Empfehlungen beachten (reduziert Dateigröße, entlastet das Device):
+
+| Empfehlung | Wert | Grund |
 |---|---|---|
-| **Farbraum** | Grayscale (IHDR color type `00`) | `eips` decodiert RGB falsch → Bild zerläuft |
-| **IDAT-Chunks** | Genau **1** IDAT | `eips` liest nur den ersten Chunk → mehr Chunks = „Zoom"-Effekt |
+| **Farbraum** | Grayscale (IHDR color type `00`) | Reduziert Dateigröße; ohne Grayscale rendert `dash` korrekt, aber die Datei ist größer |
+| **IDAT-Chunks** | Genau **1** IDAT | Sharp macht das standardmäßig; ohne 1 IDAT rendert `dash` korrekt, aber die Datei ist größer |
 | **Auflösung** | 1448×1072 Pixel (Framebuffer-Rotation) | Passt exakt auf den E-Ink-Framebuffer |
 | **Bit-Tiefe** | 8-bit | E-Ink-Display unterstützt 256 Graustufen |
 | **Interlace** | 0 (keine) | Nicht erforderlich, vereinfacht Decodierung |
@@ -151,7 +152,7 @@ Im Workflow folgende Werte anpassen:
 }
 ```
 
-**Wichtig:** Sharp schreibt standardmäßig Grayscale-PNGs mit 1 IDAT — das passt. Falls du einen anderen Encoder verwendest, unbedingt beide Regeln (color type 0 + 1 IDAT) verifizieren.
+**Wichtig:** Sharp schreibt standardmäßig Grayscale-PNGs mit 1 IDAT — das passt. Falls du einen anderen Encoder verwendest, die Empfehlungen oben als Richtwert nehmen; `dash` korrigiert Formatabweichungen device-seitig.
 
 > **Detail:** `docs/04-n8n-integration.md` §PNG-Formatierung
 

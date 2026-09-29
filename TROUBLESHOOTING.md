@@ -196,3 +196,40 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s" -o dash .
 **Lösung:** Workflow-Änderungen über die n8n-UI vornehmen. Einen neuen API-Key generieren, falls API-Zugriff nötig.
 
 > **Hinweis:** Dies betrifft nur Workflow-Änderungen via API. Der Webhook-Endpoint funktioniert weiterhin.
+
+---
+
+## Overpaint: UI malt über das Dashboard-Bild
+
+**Symptom:** Das Dashboard-Bild wird nach einem Boot oder Button-Druck von der Kindle-UI (Home-Screen, Statusleiste) übermalt.
+
+**Befund (v9, kf_fb byte analysis):**
+- **Delta:** 2,517 Bytes (0,081 % des Framebuffers) — kleines lokales UI-Element
+- **Stream bytes:** 11.831–51.073
+- **Redraw-Zyklus:** ~53–64 Sekunden (automatisch, über Sleep/Wake + neues n8n-Bild persistierend)
+- **Ursache:** Kindle-UI clock/status-bar redraw (automatisch, nicht durch User-Button-Drücke)
+- **Budget-Burn:** Kontinuierliches ~60s-Overpainting verbrennt das 3/h-Rate-Limit in ~10 Minuten
+
+**Lösung (v9):** **Auto-Restore** — nach 30 Sekunden Inaktivität wird das letzte Bild automatisch wiederhergestellt. Rate-Limit: max. 3 Restore pro Stunde, 60s Cooldown zwischen Versuchen. Im Normalbetrieb (kein Overpaint) ist der Overhead minimal (~25 ms pro fb-Read).
+
+**Deaktivieren:** `AUTO_RESTORE=0` in `refresh.sh` setzen.
+
+> **Detail:** `SETUP.md` §Schritt 7
+
+---
+
+## V9 — Verifikationszahlen
+
+**Status:** v9 deployed und getestet (29.09, Sessions S1 12:50:11Z pid=5923, S2 14:55:32Z pid=5688).
+
+| Metrik | Wert |
+|---|---|
+| Restore rc=0 | 12 |
+| Restore BLOCKED | 10 (7 Cooldown + 3 Rate-Limit) |
+| Boot-Window Re-Renders | 8 |
+| Wake-Events | 0 |
+| Downloads ok / failures | 15 / 0 |
+| eips rc=0 (gesamt) | 88× |
+| fb MATCH / CHANGED | 26 / 464 |
+
+> **Detail:** `ISSUES.md` (Commit `0ee4e40`) §I14
