@@ -13,11 +13,7 @@
 | Path | Size | Purpose |
 |---|---|---|
 | `artifacts/jailbreak/watchthis/watchthis-release/` | ~1 MB | Full WatchThis release tree (all model bins + README) — reference |
-| `artifacts/jailbreak/watchthis-jailbreak-r03.zip` | 646,247 B | Original jailbreak archive from the device (card copy) |
-| `artifacts/jailbreak/kindle-fertig/` | 172 K | "Done package" of the 21.09 session: `01-jailbreak/` + `02-hotfix/Update_hotfix_watchthis_custom.bin` + `README.txt` |
-| `artifacts/jailbreak/kual-mrpi/` | 5.5 MB | MRInstaller (KUAL) bundle for the device |
-| `artifacts/jailbreak/Update_hotfix_watchthis_custom.bin` | 153,817 B | **The** installed custom hotfix (SHA-256 `2102e30fb2fb645c32e03bda8144903484d564e6934824a8797089779c063284`), SP01 signature |
-| `artifacts/jailbreak/kindle-eink-artefakte.zip` | 269,748 B | Zip of the local `kindle-eink/` test phase (22./23.09) |
+| `artifacts/jailbreak/kual-mrpi/` | ~5 MB | MRInstaller (KUAL) bundle for the device |
 | `artifacts/.boot` | 510 B | Boot hook: waits for `eips`+`lipc-set-prop` (max ~120 s), starts `refresh.sh` via `nohup`, logs to `/mnt/us/boot.log` |
 
 ## Important properties / limitations

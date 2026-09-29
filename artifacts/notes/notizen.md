@@ -1,5 +1,5 @@
 # Projekt-Notizen
 
 ## n8n Webhook (Bild-Empfang)
-- Endpoint: https://automation.sieper.uk/webhook/rabbit-cache-discord
+- Endpoint: `REPLACE_WITH_WEBHOOK_URL`
 - Verwendung: lädt das aktuelle Bild, das auf dem Kindle E-Ink angezeigt wird

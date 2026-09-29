@@ -58,7 +58,7 @@
 #   single-IDAT grayscale PNG — write only, NO display
 # dash render <file>: display the PNG via eips (EPDC wave — the only visible path)
 
-URLS='https://automation.sieper.uk/webhook/last-rabbit-recognition-frame'
+URLS='REPLACE_WITH_WEBHOOK_URL'
 OUT=/tmp/dashboard.png
 CACHE=/mnt/us/dashboard.png
 PIDFILE=/tmp/refresh.pid

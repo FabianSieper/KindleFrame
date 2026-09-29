@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Model | Kindle Voyage 7th gen (KV, 2014) |
-| Serial | `b013 0907 5226 08b0` |
+| Serial | `REPLACE_WITH_SERIAL` |
 | Firmware | 5.13.6 (jailbroken via WatchThis Legacy, 21.09.2026) |
 | CPU | ARM 32-bit (static Go build: `GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0`) |
 | Kernel | 3.0.35-lab126 |

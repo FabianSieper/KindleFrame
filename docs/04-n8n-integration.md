@@ -1,70 +1,197 @@
-# 04 — n8n integration
+# 04 — n8n Integration
 
-## Access
+Dieses Dokument beschreibt, wie ein n8n-Workflow so konfiguriert wird, dass er ein PNG liefert, das auf dem Kindle Voyage E-Ink-Display korrekt angezeigt wird.
 
-- **n8n instance:** Docker on host `REPLACE_WITH_N8N_HOST` (LAN IP 192.168.178.108, container 172.20.0.3). Mac: 192.168.178.132. (Live endpoint value: functional artifact `artifacts/refresh.sh` — docs stay with placeholders.)
-- **Workflow:** `Rabbit Recognition (Discord)` · ID `Y6YLPaL7w3XFX4-RlygeH` · active (13 nodes in the canonical dump).
-- **Webhook endpoint:** `/webhook/last-rabbit-recognition-frame` (the second webhook node for Flow B serves the same path; its UUID is the secondary one).
-- **Canonical export (sanitized):** `n8n/rabbit-recognition-workflow.json` (API dump 23.09.2026 09:03Z)
-- **History:** `n8n/history/` (BEFORE/AFTER-20260923, live-current 08:40Z, current 09:03Z, put-pass) — all sanitized.
+## Architektur
 
-### Flows
-
-**Flow A (Discord → frame):**
 ```
-Discord (webhook, "Hase erkannt" message)
-  → Hase erkannt (IF: message contains "Hase erkannt")
-  → Read File ($json['output-file'] from the Discord node)
-  → Edit Image (Sharp): resize 1448×1072
-  → Edit Image 2  ← in the 09:03Z state: env probe (450 chars)
-  → Respond to Webhook (200, binary "image", Content-Type image/png, no-store)
+n8n Webhook ──► dash GET (auf dem Kindle, alle 300 s)
+                      ├─ Go image/png decode (RGB + multi-IDAT als INPUT ok)
+                      ├─ Floyd-Steinberg Grayscale
+                      ├─ saveKindlePNG (1 IDAT, color type 0)
+                      └─ /mnt/us/dashboard.png
+                  dash render → eips -g (EPDC-Wave, sichtbar)
 ```
 
-**Flow B (cache):** `Schedule Trigger (5 min)` → `Read File` (second, older frame) → `Respond to Webhook` (same webhook, then serves the cache).
+**Wichtig:** `dash` konvertiert das vom Webhook gelieferte PNG **auf dem Device** in das korrekte Format. Der n8n-Workflow muss **nicht** Grayscale oder 1-IDAT liefern — er darf RGB mit mehreren IDAT-Chunks senden. Die Konvertierung übernimmt `dash`.
 
-## Node detail (relevant parameters)
+**Empfehlung:** n8n sollte trotzdem Grayscale liefern (reduziert Dateigröße, entlastet das Device). Siehe unten.
 
-- `Edit Image`: `operation=resize`, `width=1448`, `height=1072`, `inputFieldName=image`, `outputFieldName=image`.
-- `Edit Image 2` **chronology** (this is the 3-day chaos node, → `ISSUES.md` I2/I5):
-  1. `rotate: 90` (Sharp) = t180 (transpose+180° = 90° CW + horizontal flip)
-  2. **Gold code** `t180-n8n.js` (14,565 B, `n8n/code/`): manual PNG writer (transposed pixels + 180° flip), sandbox-verified byte-exact vs `golden_t180.png` (28,052,160 pixels, PASS) — **never deployed** (API key 401)
-  3. `rotate: 270` (dump 08:40Z)
-  4. Env probe (450 chars, dump 09:03Z = last state in the repo) — inserted because **code nodes do not run at all on this n8n instance** (execution error, 0 node executions).
-- `Respond to Webhook`: `respondWith=binary`, `inputFieldName=image`, `responseCode=200`, header `Cache-Control: no-store`, `Content-Type: image/png`.
+---
 
-## What the webhook does **not** do (and why that's ok)
+## Workflow-Struktur
 
-- **No grayscale, no single-IDAT** — n8n `Edit Image` (Sharp) has no grayscale operation; the code-node path got stuck (401). The webhook delivers RGB 1072×1448 (19 IDAT, 585–601 KB).
-- **That is ok in the final architecture:** `dash` converts on the device (I10). n8n grayscale stays optional (I10 step 7).
+Der Workflow `Rabbit Recognition (Discord)` hat zwei Flows:
 
-## Sanitizing note (mandatory for every future n8n change)
+### Flow A (Discord → Frame)
 
-Two classes must never reach the repo: **secrets** and **user-specific (personal) information**.
+```
+Discord Webhook (Nachricht "Hase erkannt")
+  → IF: Nachricht enthält "Hase erkannt"
+  → Read File (Datei aus Discord-Nachricht)
+  → Edit Image (Sharp): Resize auf 1448×1072
+  → [optional] Edit Image 2: Grayscale
+  → Respond to Webhook (200, binary, image/png)
+```
 
-Secrets — replaced by placeholders:
+### Flow B (Cache)
 
-| Original (abridged) | Placeholder |
+```
+Schedule Trigger (alle 5 min)
+  → Read File (älteres Frame)
+  → Respond to Webhook (gleicher Webhook-Pfad)
+```
+
+---
+
+## PNG-Formatierung für das Kindle-Display
+
+### Regel 1: Grayscale (IHDR color type 0)
+
+`eips` decodiert nur **8-bit Grayscale**. RGB-Bilder (color type 2) führen zu zerlaufenem Bild.
+
+**Sharp-Konfiguration (n8n Edit Image Node):**
+
+```javascript
+{
+  "operation": "resize",
+  "width": 1448,
+  "height": 1072,
+  "options": {
+    "greyscale": true
+  }
+}
+```
+
+**Ohne Grayscale (akzeptabel, aber größer):** `dash` konvertiert auf dem Device. Das PNG ist größer (RGB = 3× Daten), aber `dash` decodiert RGB korrekt und wandelt in Grayscale um.
+
+### Regel 2: Genau 1 IDAT-Chunk
+
+`eips` liest nur den **ersten IDAT-Chunk**. Mehrere Chunks → „Zoom"-Effekt (nur erster Teil wird gelesen und skaliert).
+
+**Sharp-Konfiguration:** Sharp schreibt standardmäßig **1 IDAT-Chunk** bei PNG-Export. Keine zusätzliche Konfiguration nötig.
+
+**Verifikation (Mac/Linux):**
+
+```sh
+python3 -c "
+import struct, sys
+with open(sys.argv[1], 'rb') as f:
+    chunks = []
+    while True:
+        h = f.read(8)
+        if len(h) < 8: break
+        length, type_ = struct.unpack('>I4s', h)
+        chunks.append(type_.decode('ascii'))
+        f.read(length + 4)
+    idat = chunks.count('IDAT')
+    print(f'IDAT: {idat} (muss 1 sein)')
+    if idat != 1: print('FEHLER: Bild wird als Zoom-Crop angezeigt!')
+" dein_bild.png
+```
+
+### Regel 3: Auflösung 1448×1072 Pixel
+
+Das Framebuffer der Voyage ist **1072×1448** (bei `rotate=3` = 270°). Für die korrekte Anzeige muss das PNG **1448×1072** sein (Breite × Höhe).
+
+**Sharp-Konfiguration:**
+
+```javascript
+{
+  "operation": "resize",
+  "width": 1448,
+  "height": 1072
+}
+```
+
+### Regel 4: 8-bit Farbtiefe
+
+E-Ink-Display unterstützt 256 Graustufen.
+
+**Sharp:** Standardmäßig 8-bit bei PNG-Export.
+
+### Regel 5: Kein Interlace
+
+Interlaced PNGs sind nicht erforderlich und vereinfachen die Decodierung.
+
+**Sharp:** Standardmäßig nicht interlaced.
+
+---
+
+## Komplette Sharp-Konfiguration (Empfehlung)
+
+Im n8n `Edit Image`-Node:
+
+```javascript
+{
+  "operation": "resize",
+  "width": 1448,
+  "height": 1072,
+  "options": {
+    "greyscale": true,
+    "format": "png",
+    "compressionLevel": 9
+  }
+}
+```
+
+Dies liefert ein PNG, das:
+- Grayscale ist (color type 0)
+- Genau 1 IDAT-Chunk hat
+- 1448×1072 Pixel misst
+- 8-bit Farbtiefe hat
+- Maximal komprimiert ist (kleinste Dateigröße)
+
+---
+
+## Respond to Webhook Node
+
+```
+respondWith: binary
+inputFieldName: image
+responseCode: 200
+headers:
+  Cache-Control: no-store
+  Content-Type: image/png
+```
+
+---
+
+## Workflow importieren und konfigurieren
+
+### 1. Workflow importieren
+
+`n8n/rabbit-recognition-workflow.json` in die n8n-Instanz importieren (Setup → Workflows → Import).
+
+### 2. Platzhalter ersetzen
+
+| Platzhalter | Wert |
 |---|---|
-| Discord credential ID (`p6Ke…`) | `REPLACE_WITH_YOUR_DISCORD_CREDENTIAL_ID` |
-| Credential display name ("Hasi…") | `REPLACE_WITH_YOUR_CREDENTIAL_NAME` |
-| Webhook UUID primary (`2f87…`) | `REPLACE_WITH_WEBHOOK_UUID_1` |
-| Webhook UUID secondary (`8458…`) | `REPLACE_WITH_WEBHOOK_UUID_2` |
+| `REPLACE_WITH_WEBHOOK_UUID_1` | Webhook-UUID für Discord-Ausgang |
+| `REPLACE_WITH_YOUR_DISCORD_CREDENTIAL_ID` | Discord-Bot-API-Credential-ID |
+| `REPLACE_WITH_YOUR_CREDENTIAL_NAME` | Credential-Name |
 
-Personal information — **deleted** from API dumps (set to `[]` / removed key):
+### 3. Webhook-URL notieren
 
-| Field | Treatment |
-|---|---|
-| `shared[]` (project + user objects: name, e-mail, `creatorId`, …) | removed |
-| `activeVersion.shared`, `activeVersion.workflowPublishHistory` | removed |
-| `authors` (top level or in `activeVersion`) | removed |
-| `personalizationAnswers` | removed |
-| personal hostnames in docs (e.g. the n8n host) | `REPLACE_WITH_N8N_HOST` |
+Die Webhook-URL (z. B. `https://dein-n8n.host/webhook/last-rabbit-recognition-frame`) in `artifacts/refresh.sh` eintragen (Platzhalter `REPLACE_WITH_WEBHOOK_URL`).
 
-**Before commit** always grep for the full original strings (credential ID, both webhook UUIDs, credential name) **and for any known personal data** (names, e-mails, personal hostnames) — the result must be empty (exceptions: `artifacts/notes/` and functional device scripts, see `AGENTS.md` prohibitions). New dumps must be sanitized **before** storage (same 4 placeholder replacements + PII deletion). LAN IPs in shell scripts/logs are infrastructure, not personal data — leave them.
+### 4. Workflow aktivieren
 
-## Open (n8n-side)
+Workflow in n8n aktivieren und testen:
 
-- `[open]` **API key (401)** never solved → workflow changes via API blocked; the user's UI changes are the path. Until then `Edit Image 2` stays in probe state (harmless: delivers JSON instead of binary → Flow A no longer answers correctly; Flow B/cache + the device path keep running).
-- `[open]` Code nodes do not run on this instance (execution error) — investigate if grayscale-per-n8n (I10-7) is wanted.
-- `[open]` Optional: deploy `t180-n8n.js` via UI (pixel-exact, but still RGB/multi-IDAT → only for orientation, not for eips compatibility).
-- `[open]` Optional (I10-7): grayscale code node (replaces `t180`, delivers 1-IDAT grayscale → relieves `dash`).
+```sh
+curl -s "https://dein-n8n.host/webhook/last-rabbit-recognition-frame" -o test.png
+# Prüfen: Datei existiert, Größe > 0, PNG-Format
+```
+
+---
+
+## Sanitizing (bei Workflow-Exports)
+
+Beim Exportieren von Workflows für das Repository:
+
+1. **Secrets** durch Platzhalter ersetzen (Credential-IDs, Webhook-UUIDs)
+2. **Persönliche Daten** entfernen (`shared[]`, `authors`, `personalizationAnswers`)
+3. Vor Commit suchen nach Original-Credential-IDs, UUIDs, persönlichen Hostnamen
+
+Siehe `SETUP.md` für Platzhalter-Übersicht.
