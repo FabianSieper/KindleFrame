@@ -41,7 +41,7 @@ n8n-Workflow (Webhook)
 
 **Version v9 deployed (Karte).** Die Setup-Anleitung ist final; die finale User-Verifikation (Round 6: Boot-Bild hält + 30-s-Auto-Restore-Test) steht noch aus.
 
-Offen: T18/T19 (n8n-seitige Grayscale-Konvertierung) — blockiert auf n8n-API-Key (401).
+Offen: n8n-seitige Grayscale-Konvertierung (optional, s. `docs/04-n8n-integration.md`) — blockiert auf n8n-API-Key (401).
 
 ## Wichtige Hinweise
 
@@ -49,3 +49,4 @@ Offen: T18/T19 (n8n-seitige Grayscale-Konvertierung) — blockiert auf n8n-API-K
 - **Keine Secrets im Repo:** Alle Webhook-URLs, Hostnamen und Credential-IDs sind als Platzhalter markiert
 - **Keine persönlichen Daten:** Serial-Nummern, Account-IDs und Hostnamen sind anonymisiert
 - **Pfad-Regel:** Alle Pfade sind relativ (repo-relativ oder `~`-relativ). Device-interne Pfade (`/mnt/us/`, `/tmp`, `/usr/sbin/eips`) und Standard-Mounts (`/Volumes/Kindle`) sind Ausnahmen
+- **T-/I-Nummern:** Kennungen wie `T20` oder `I14` in den `docs/` sind historische Verweis-IDs aus der Projektphase; die zugehörigen Todo-/Issue-Listen sind bewusst nicht Teil dieses Repos

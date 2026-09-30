@@ -32,7 +32,7 @@ with open(sys.argv[1], 'rb') as f:
 
 **Erfolgreich:** `IDAT chunks: 1`
 
-> **Detail:** `docs/03-eink-rendering.md` §Die zwei harten Anforderungen
+> **Detail:** `docs/03-eink-rendering.md` §„The two hard requirements for `eips -g <png>`“
 
 ---
 
@@ -149,7 +149,7 @@ Die Kindle-UI malt den Home-Screen wenige Sekunden nach dem Boot über das Dashb
 
 **Lösung:** Im n8n-Workflow die Bildausgabe als t180 transformieren. Die `dash`-Binary übernimmt dies automatisch beim Decodieren.
 
-> **Detail:** `docs/03-eink-rendering.md` §Geometry
+> **Detail:** `docs/03-eink-rendering.md` §„Framebuffer & geometry reference“
 
 ---
 
@@ -232,6 +232,6 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s" -o dash .
 | eips rc=0 (gesamt) | 88× |
 | fb MATCH / CHANGED | 26 / 464 |
 
-> **Detail:** `ISSUES.md` §I14 (nur in der Git-Historie — `git show 0ee4e40:ISSUES.md`)
+> **Detail:** Zahlenbasis = Feldanalyse 29.09 (refresh.log + diag.log, s. `artifacts/logs/`) + kf_fb/-Raw-Dump-Analyse (Raw-Dumps aus Platzgründen nicht im Repo). Die vollständige Chronologie (I1–I15) liegt in `ISSUES.md` im Archive-Branch `archive/downloads-working-2026-09-30`.
 
-> **I15 (Wake-Kriterium):** Die Wake-Erkennung im `refresh.sh`-Code hat in der Feldphase **nie** ausgelöst — 0 Wake-Zeilen in allen Logs; auch der 42.047-s-Thaw vom 28.09 (08:13:30Z → 19:54:17Z) produzierte keine Wake-Linie (Deep-Sleep-Freeze des ganzen Loops). Das Kriterium „Sleep/Wake → Bild bleibt" ist daher nicht über den Wake-Code-Pfad nachgewiesen, sondern über: Boot-Fenster-Renders (rc=0 + fb MATCH), steady-state fb MATCH, `dl ok` und die „clock check"-Zeile. v9-Urteil (Code-geprüft): bleibt FINAL, kein Code-Change.
+> **Wake-Kriterium (nicht über den Code-Pfad nachgewiesen):** Die Wake-Erkennung im `refresh.sh`-Code hat in der Feldphase **nie** ausgelöst — 0 Wake-Zeilen in allen Logs; auch der 42.047-s-Thaw vom 28.09 (08:13:30Z → 19:54:17Z) produzierte keine Wake-Linie (Deep-Sleep-Freeze des ganzen Loops). Das Kriterium „Sleep/Wake → Bild bleibt" ist daher nicht über den Wake-Code-Pfad nachgewiesen, sondern über: Boot-Fenster-Renders (rc=0 + fb MATCH), steady-state fb MATCH, `dl ok` und die „clock check"-Zeile. v9-Urteil (Code-geprüft): bleibt FINAL, kein Code-Change.

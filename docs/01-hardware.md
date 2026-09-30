@@ -13,7 +13,7 @@
 | Display | 7.8" E-Ink (bistable), 300 ppi, **758×1024** portrait / 1024×758 |
 | Framebuffer | `mxc_epdc_fb`: **1072×1448**, 8-bit, `line_length=1088` (20 B pad), `vres=1088×6144`, `smem=6,782,976 B`, **`rotate=3`**, `grayscale=1` |
 
-Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped by the driver logic for the 758×1024 display geometry with `rotate=3` (270°). → For everything image-related: think in **framebuffer space (1072×1448)**, the console shows it rotated. See `03-eink-rendering.md` §Geometry.
+Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped by the driver logic for the 758×1024 display geometry with `rotate=3` (270°). → For everything image-related: think in **framebuffer space (1072×1448)**, the console shows it rotated. See `03-eink-rendering.md` §„Framebuffer & geometry reference“.
 
 ## Filesystem layout (relevant)
 
