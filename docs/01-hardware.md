@@ -19,7 +19,7 @@ Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped 
 
 | Path | Property |
 |---|---|
-| `/mnt/us/` | External MicroSD (FAT), mountable from the Mac as `/Volumes/Kindle`. **Here** live: `dash`, `refresh.sh`, `dashboard.png`, `RUNME.sh`, `emergency.sh`, `.boot`, logs. No-exec mount (binaries must be staged to `/tmp` = tmpfs) — `refresh.sh` v4 does that on size change. |
+| `/mnt/us/` | External MicroSD (FAT), mountable from the Mac as `/Volumes/Kindle`. **Here** live: `dash`, `refresh.sh`, `dashboard.png`, `RUNME.sh` (test), `emergency.sh` (production launcher), `.boot` (legacy, unused), logs. No-exec mount (binaries must be staged to `/tmp` = tmpfs) — `refresh.sh` v4 does that on size change. |
 | `/` (ROM) | Internal, read-only. Contains among others `/usr/sbin/eips` (133,432 B, **not** extractable/copyable from the Mac) and the framebuffer device. |
 | `/dev/fb0` | Framebuffer; writable (mmap), but **visible only via EPDC refresh** (→ 03). |
 | `/tmp/` | tmpfs; `dash` is staged here on deploy/update. |
@@ -27,7 +27,7 @@ Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped 
 ## Interaction model (important for all device work)
 
 - **There is no free terminal on the device.** All interaction happens via MRPI (`;log <file>`, `;get <file>`) and files on `/mnt/us/` (readable from the Mac). `[recalled]` from project record.
-- All execution ran through script hooks: `.boot` (runs after boot, starts `refresh.sh`) and `RUNME.sh`-style test scripts.
+- All execution runs through script hooks: the **stock** `mkk/bridge.conf` (shipped by the WatchThis jailbreak, NiLuJe rev. 17398) executes `/mnt/us/emergency.sh` on every boot, which starts `refresh.sh`; `RUNME.sh`-style test scripts work the same way (run on the next reboot). The legacy `.boot` (510 B) is **not** used by the current boot path.
 - **Proof/debugging** therefore runs via: logs on `/mnt/us/*.log` (readable from the Mac) + test scripts that run on the next reboot.
 - **No `curl`, no `python`, no `perl`, no `bash`** — only `wget` (BusyBox, WPA2-capable, ~10 s) + POSIX `sh` + coreutils (`grep`/`sed`/`awk`).
 - E-Ink **stays bistable** — a dead `refresh.sh` simply leaves the last image on screen.
@@ -41,6 +41,6 @@ Framebuffer geometry: the 1072×1448 buffer is padded by 20 B/row and is mapped 
 ## Reboot/deploy path
 
 1. Mac: write `dash`/`refresh.sh`/`dashboard.png` to `/mnt/us/` (FAT write).
-2. Reboot the Kindle (or `eips`/`lipc` via script hook — `.boot` starts `refresh.sh` after the system-ready wait).
+2. Reboot the Kindle (the stock `bridge.conf` hook runs `emergency.sh`, which waits for `eips` and starts `refresh.sh`).
 3. `refresh.sh` v4 stages `dash` → `/tmp/dash` (on size change) and takes up the 10-s tick.
 4. Verification: read `/mnt/us/refresh.log` from the Mac.

@@ -93,15 +93,18 @@ cp artifacts/refresh.sh /Volumes/Kindle/refresh.sh
 chmod 700 /Volumes/Kindle/refresh.sh
 ```
 
-### 4c. Boot-Trigger einrichten
+### 4c. Autostart einrichten (`emergency.sh`)
 
-Die Datei `.boot` auf `/mnt/us/.boot` triggert `refresh.sh` beim Neustart:
+Der WatchThis-Jailbreak bringt die Upstart-Konfiguration `mkk/bridge.conf` **stock** mit (NiLuJe/WatchThis, rev. 17398 — kommt mit dem Hotfix, muss **nicht** deployt oder geändert werden). Ihr `pre-start`-Hook führt bei jedem Boot automatisch `/mnt/us/emergency.sh` aus (detect → `chmod +x` → exec → `return 0`, umgeht den normalen Bridge-Start). Es fehlt also nur das Start-Script:
 
 ```sh
-cp artifacts/.boot /Volumes/Kindle/.boot
+cp artifacts/emergency.sh /Volumes/Kindle/emergency.sh
+chmod 700 /Volumes/Kindle/emergency.sh
 ```
 
-> **Achtung:** Der Inhalt von `.boot` muss den Pfad zu `refresh.sh` enthalten und vom Kindle-Boot-Prozess ausgeführt werden können. Den genauen Mechanismus über KUAL/MRPI konfigurieren.
+`emergency.sh` wartet kurz auf `eips` (≤30 s) und startet `refresh.sh` (Double-Fork, detacht — überlebt auch, wenn der Upstart-Job endet). Nach dem Reboot ist der Loop ohne weiteres Zutun aktiv.
+
+> **Hinweis:** `artifacts/.boot` (510 B) stammt aus der Frühphase des Projekts (wartet auf `eips` + `lipc-set-prop`, startet `refresh.sh` via `nohup`, loggt nach `/mnt/us/boot.log`) und wird vom aktuellen Boot-Pfad **nicht** verwendet (Field: keine `boot.log` nach 2 Reboots). Es liegt im Repo nur der Vollständigkeit halber — nicht deployen.
 
 ---
 
@@ -161,21 +164,23 @@ Im Workflow folgende Werte anpassen:
 Workflow in n8n aktivieren und den Webhook-Endpoint testen:
 
 ```sh
-# Vom Kindle aus (über MRPI oder .boot):
-wget -O /tmp/test.png "REPLACE_WITH_WEBHOOK_URL"
-# Prüfen: Datei existiert, Größe > 0
+# Vom Mac aus (der Endpoint ist aus dem LAN erreichbar):
+curl -o /tmp/test.png "REPLACE_WITH_WEBHOOK_URL"
+# Prüfen: Datei existiert, Größe > 0, ist ein gültiges PNG
 ```
+
+> **Hinweis:** Vom Device selbst ist der Endpoint nur über ein Test-Script prüfbar (`RUNME.sh`-Stil auf `/mnt/us/`, läuft beim nächsten Reboot — es gibt kein freies Terminal). In der Regel ist das nicht nötig: `refresh.sh`/`dash` testen den Download ohnehin im 300-s-Takt und loggen das Ergebnis nach `/mnt/us/refresh.log`.
 
 ---
 
 ## Schritt 6: Erstes Deployment testen
 
-### 6a. Manuelles Starten
+### 6a. Starten
 
-```sh
-# Auf dem Kindle (über MRPI oder SSH, falls verfügbar):
-sh /mnt/us/refresh.sh &
-```
+Auf dem Device gibt es **kein freies Terminal und kein SSH** — ein interaktives `sh /mnt/us/refresh.sh &` ist nicht möglich. `refresh.sh` startet:
+
+- **automatisch** über `emergency.sh` (stock `mkk/bridge.conf`-Hook) nach jedem Reboot (Schritt 4c),
+- **ohne Reboot (Test)** über ein Test-Script im `RUNME.sh`-Stil auf `/mnt/us/`, das `refresh.sh` detacht startet (läuft beim nächsten Reboot).
 
 ### 6b. Logs überprüfen
 
@@ -243,7 +248,7 @@ Die v9 von `refresh.sh` enthält einen **Auto-Restore-Mechanismus** gegen UI-Ove
 ## Schritt 9: Neustart testen
 
 1. Kindle neu starten
-2. Warten bis `refresh.sh` über `.boot` gestartet wird
+2. Warten, bis `refresh.sh` über `emergency.sh` (stock `bridge.conf`-Hook) gestartet wird
 3. Nach ~5-10 Sekunden sollte das erste Bild erscheinen
 4. Nach ~20-60 Sekunden kann ein zweites Render erfolgen (Boot-Window-Re-Render, v9)
 5. Auto-Restore übernimmt falls UI-Overpaint auftritt
@@ -257,5 +262,5 @@ Alle dokumentierten Fehlerfälle und Lösungen: **`TROUBLESHOOTING.md`**
 Häufigste Probleme:
 - **Bild zeigt Zoom/Vergrößerung** → PNG hat mehrere IDAT-Chunks (Regel 2 verletzt)
 - **Bild zerläuft/farbig** → PNG ist RGB statt Grayscale (Regel 1 verletzt)
-- **Kein Bild nach Reboot** → `.boot`-Trigger nicht konfiguriert oder `~ds` nicht eingegeben
+- **Kein Bild nach Reboot** → `emergency.sh` fehlt auf der Karte (oder `~ds` nicht eingegeben)
 - **Deep-Sleep-Probleme** → Device schläft ein → Loop friert ein → `~ds` neu eingeben
