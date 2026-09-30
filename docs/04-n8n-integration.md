@@ -8,7 +8,7 @@ Dieses Dokument beschreibt, wie ein n8n-Workflow so konfiguriert wird, dass er e
 
 Für die korrekte Orientation auf dem Kindle Voyage (Framebuffer `rotate=3` = 270°) ist t180 die **korrekte** Transformation. Ein sauberes 90°-Drehen wäre t180 **ohne** den horizontalen Flip.
 
-**Gold-Code (`n8n/code/t180-n8n.js`):** Eine pure-JS PNG-Pipeline (406 Zeilen, ~14 KB), die t180 korrekt implementiert (transponiert, ohne 90°-Flip + 180°-Flip). Sandbox-Test (Node vm, n8n `items`-Format): **PASS, 28.052.160 Pixel byte-exakt vs. `golden_t180.png`**. **Nie live deployed** — n8n REST API returned 401 (API-Key ungültig).
+**Gold-Code (`n8n/code/t180-n8n.js`):** Eine pure-JS PNG-Pipeline (406 Zeilen, ~14 KB), die t180 korrekt implementiert (transponiert, ohne 90°-Flip + 180°-Flip). Sandbox-Test (Node vm, n8n `items`-Format): **PASS, 1.552.256 Pixel (1072×1448, 8-bit-Grayscale) byte-exakt vs. `golden_t180.png`**. **Nie live deployed** — n8n REST API returned 401 (API-Key ungültig).
 
 > **Detail:** `docs/03-eink-rendering.md` §Framebuffer & geometry reference
 

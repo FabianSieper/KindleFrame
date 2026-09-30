@@ -24,7 +24,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s" -o dash .
 ## Ergebnis
 
 - **Dateiname:** `dash`
-- **Größe:** ~5,18 MB (5,177,496 B)
+- **Größe:** 5,243,032 B (aktuelles fbdump-Build, SHA-256 `b0736ae4…`; T20-Build davor: 5,177,496 B / `58f751e4…`)
 - **Format:** Statische ARM-ELF-Binary, keine dynamischen Abhängigkeiten
 - **Toolchain:** Go 1.23.12
 

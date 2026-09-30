@@ -9,7 +9,7 @@ Ein 24/7 E-Ink-Dashboard auf einem jailbreakten **Kindle Voyage (KV)** — anget
 ```
 n8n-Workflow (Webhook)
   → PNG (Grayscale, 1 IDAT, 1448×1072)
-    → refresh.sh (wget + cksum-Prüfung)
+    → refresh.sh (dash get: Go-Download + Content-Change-Prüfung)
       → dash render (eips EPDC-Update)
         → E-Ink-Display (Bistabil — Bild hält ohne Strom)
 ```
@@ -39,7 +39,7 @@ n8n-Workflow (Webhook)
 
 ## Status
 
-**Version v9 deployed und produktiv.** Alle Deployment-Schritte abgeschlossen und verifiziert.
+**Version v9 deployed (Karte).** Die Setup-Anleitung ist final; die finale User-Verifikation (Round 6: Boot-Bild hält + 30-s-Auto-Restore-Test) steht noch aus.
 
 Offen: T18/T19 (n8n-seitige Grayscale-Konvertierung) — blockiert auf n8n-API-Key (401).
 
